@@ -38,7 +38,8 @@ description: Use this skill when a user wants to turn a public GitHub repository
 - Restored highlights should be clickable/tappable and open the attached note in the reading-notes panel.
 - The mobile notes sheet should minimise from the handle/backdrop without a close button, and non-empty drafts should autosave without creating duplicate notes.
 - Assistant explanations and selected terms should be saved as notes so the user can revisit them later.
-- Voice note buttons use a mic icon and visible recording state; tapping again stops recording.
+- Voice note buttons use a mic icon and visible recording state; tapping again stops recording. Use a subtle red glow for active recording, not a pulsing animation.
+- Trim voice transcription text at the API boundary and again before inserting it into notes, review answers, or assistant inputs.
 - PWA refresh prompts must show immediate feedback after click, such as disabling the button and showing `Refreshing...` with a spinner.
 
 ## Safety Rules

@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       language: "en",
       temperature: 0,
     });
-    const transcript = transcription.text ?? "";
+    const transcript = (transcription.text ?? "").trim();
     await db.update(transcriptionJobs).set({ status: "completed", transcript, metadata: transcription, updatedAt: new Date() }).where(eq(transcriptionJobs.id, job.id));
     return NextResponse.json({ transcript, jobId: job.id });
   } catch (error) {

@@ -575,8 +575,13 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
           setMessage(data.error ?? "Transcription failed.");
           return;
         }
+        const transcript = (data.transcript ?? "").trim();
+        if (!transcript) {
+          setMessage("No speech was detected.");
+          return;
+        }
         setType("voice", recordingSectionId.current);
-        setBody((current) => [current, data.transcript].filter(Boolean).join("\n\n"), recordingSectionId.current);
+        setBody((current) => [current, transcript].filter(Boolean).join("\n\n"), recordingSectionId.current);
         setMessage("Transcript added as an editable draft.");
       } catch {
         setMessage("Transcription failed. Check your connection and try again.");
@@ -653,9 +658,8 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
           <button
             onClick={recording ? stopRecording : startRecording}
             aria-pressed={recording}
-            className={`relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${recording ? "bg-red-600 text-white shadow-lg shadow-red-500/40 ring-4 ring-red-200" : "border border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100"}`}
+            className={`relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${recording ? "bg-red-600 text-white shadow-[0_0_0_4px_rgba(248,113,113,0.16),0_12px_28px_rgba(220,38,38,0.18)]" : "border border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100"}`}
           >
-            {recording ? <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-red-400/40" /> : null}
             <MicIcon className="size-4" />
             {recording ? "Recording... tap to stop" : "Voice note"}
           </button>

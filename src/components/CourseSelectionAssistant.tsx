@@ -273,7 +273,12 @@ export function CourseSelectionAssistant() {
           setVoiceMessage(data.error ?? "Transcription failed.");
           return;
         }
-        setQuestion((current) => [current, data.transcript].filter(Boolean).join(current ? "\n\n" : ""));
+        const transcript = (data.transcript ?? "").trim();
+        if (!transcript) {
+          setVoiceMessage("No speech was detected.");
+          return;
+        }
+        setQuestion((current) => [current, transcript].filter(Boolean).join(current ? "\n\n" : ""));
         setVoiceMessage("Transcript added. Edit it, then send.");
         window.setTimeout(() => inputRef.current?.focus(), 50);
       } catch {
