@@ -33,7 +33,7 @@ description: Use this skill when a user wants to turn a public GitHub repository
 - The notes sheet must close from the handle, close button, or outside tap, and it must not obscure next/previous navigation.
 - Auto-set unread sections to `currently viewing` when they enter the reading band.
 - Auto-complete sections after the user scrolls past them, unless the user manually resets the section.
-- `Next` and `Next chapter` must mark the final section on the current page completed before navigating.
+- `Next` and `Next chapter` must mark every section on the current chapter/page completed before navigating so the previous chapter status turns done.
 - Notes have two main modes: page notes and highlighted-text notes. The reading-notes panel is page-level, aggregates notes across the current chapter/page, and must not jump labels as sub-sections enter the viewport.
 - Store highlighted text separately from the note body and re-highlight saved text when the user returns. The selection toolbar should expose `Highlight`, not a confusing `Add note` action.
 - Restored highlights should be clickable/tappable and open the same highlight in the reading-notes editor without duplicating it elsewhere in the panel.

@@ -58,7 +58,7 @@ export default async function CourseChapterPage({ params }: { params: Promise<{ 
   const chapterNeedsReview = chapter.sections.filter((section) => progressBySection.get(section.id) === "needs_review").length;
   const chapterProgress = Object.fromEntries(chapter.sections.map((section) => [section.id, progressBySection.get(section.id)]));
   const allSectionProgress = Object.fromEntries(progressRows.map((row) => [row.sectionId, row.state]));
-  const lastSectionId = chapter.sections.at(-1)?.id;
+  const chapterSectionIds = chapter.sections.map((section) => section.id);
   const notePanelSections = chapter.sections.map((section) => ({
     id: section.id,
     slug: section.slug,
@@ -82,7 +82,7 @@ export default async function CourseChapterPage({ params }: { params: Promise<{ 
             </div>
             <div className="mt-5 flex flex-wrap gap-3 text-sm">
               {previous ? <Link className="rounded-full border border-stone-300 px-4 py-2" href={`/course/${previous.slug}`}>Previous</Link> : null}
-              {next && lastSectionId ? <CompleteThenNavigateLink sectionId={lastSectionId} className="rounded-full border border-stone-300 px-4 py-2" href={`/course/${next.slug}`}>Next</CompleteThenNavigateLink> : null}
+              {next && chapterSectionIds.length ? <CompleteThenNavigateLink sectionIds={chapterSectionIds} className="rounded-full border border-stone-300 px-4 py-2" href={`/course/${next.slug}`}>Next</CompleteThenNavigateLink> : null}
             </div>
           </div>
           <SectionProgressNav sections={chapter.sections.map((section) => ({ id: section.id, slug: section.slug, title: section.title }))} initialProgress={chapterProgress} />
@@ -101,7 +101,7 @@ export default async function CourseChapterPage({ params }: { params: Promise<{ 
           <CourseSelectionAssistant />
           <div className="mt-8 flex min-w-0 flex-wrap justify-between gap-3 rounded-[1.5rem] border border-stone-200 bg-white/80 p-4">
             {previous ? <Link className="rounded-full border border-stone-300 px-4 py-2 font-semibold text-stone-700" href={`/course/${previous.slug}`}>Previous chapter</Link> : <span />}
-            {next && lastSectionId ? <CompleteThenNavigateLink sectionId={lastSectionId} className="rounded-full bg-stone-950 px-4 py-2 font-semibold text-white" href={`/course/${next.slug}`}>Next chapter</CompleteThenNavigateLink> : null}
+            {next && chapterSectionIds.length ? <CompleteThenNavigateLink sectionIds={chapterSectionIds} className="rounded-full bg-stone-950 px-4 py-2 font-semibold text-white" href={`/course/${next.slug}`}>Next chapter</CompleteThenNavigateLink> : null}
           </div>
         </div>
       </main>

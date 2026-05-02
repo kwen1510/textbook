@@ -6,7 +6,8 @@ import { getSection } from "@/lib/course";
 import { progress } from "@/lib/schema";
 
 const progressSchema = z.object({
-  sectionId: z.string().min(1),
+  sectionId: z.string().min(1).optional(),
+  sectionIds: z.array(z.string().min(1)).optional(),
   state: z.enum(["unread", "reading", "completed", "needs_review"]),
 });
 
@@ -15,17 +16,19 @@ export async function POST(request: Request) {
   if (response) return response;
   const parsed = progressSchema.safeParse(await request.json());
   if (!parsed.success) return jsonError(parsed.error.issues[0]?.message ?? "Invalid progress update");
-  if (!getSection(parsed.data.sectionId)) return jsonError("Unknown section", 404);
+  const targetSectionIds = Array.from(new Set(parsed.data.sectionIds ?? (parsed.data.sectionId ? [parsed.data.sectionId] : [])));
+  if (!targetSectionIds.length) return jsonError("Provide a sectionId or sectionIds.");
+  if (targetSectionIds.some((sectionId) => !getSection(sectionId))) return jsonError("Unknown section", 404);
   try {
-    const [row] = await getDb()
+    const rows = await getDb()
       .insert(progress)
-      .values({ userId: user.id, ...parsed.data })
+      .values(targetSectionIds.map((sectionId) => ({ userId: user.id, sectionId, state: parsed.data.state })))
       .onConflictDoUpdate({
         target: [progress.userId, progress.sectionId],
         set: { state: parsed.data.state, updatedAt: new Date() },
       })
       .returning();
-    return NextResponse.json({ progress: row });
+    return NextResponse.json({ progress: rows.length === 1 ? rows[0] : rows, progressRows: rows });
   } catch (error) {
     return jsonRuntimeError(error, "Progress could not be saved");
   }
