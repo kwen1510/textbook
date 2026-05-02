@@ -190,7 +190,7 @@ function getSourceSectionId(note: Note) {
 export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps) {
   const firstSectionId = sections[0]?.id ?? "";
   const pageAnchorSectionId = pageSectionId || firstSectionId;
-  const [, setActiveSectionId] = useState(firstSectionId);
+  const [activeSectionId, setActiveSectionId] = useState(firstSectionId);
   const [notesBySection, setNotesBySection] = useState<Record<string, Note[]>>(() => getInitialNotesBySection(sections));
   const [draftsBySection, setDraftsBySection] = useState<Record<string, string>>({});
   const [quotesBySection, setQuotesBySection] = useState<Record<string, string>>({});
@@ -218,8 +218,9 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
     () => sections.find((section) => section.id === pageAnchorSectionId) ?? sections[0],
     [pageAnchorSectionId, sections],
   );
-  const sectionId = pageSection?.id ?? "";
+  const sectionId = activeSectionId || pageSection?.id || "";
   const sectionTitle = pageTitle || pageSection?.title || "Reading notes";
+  const targetSectionTitle = sectionTitleById[sectionId] ?? pageSection?.title ?? sectionTitle;
   const notes = useMemo(() => (
     Object.values(notesBySection)
       .flat()
@@ -348,15 +349,16 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
     function handleAddHighlight(event: Event) {
       const detail = (event as CustomEvent<ReadingNotesAddHighlightDetail>).detail;
       if (!detail?.sectionId || !detail.text) return;
-      activateSection(detail.sectionId, { openDrawer: true });
-      setType("highlight", sectionId);
-      setQuote(detail.text, sectionId);
-      setQuoteSource(detail.sectionId, sectionId);
-      setBody("", sectionId);
+      const targetSectionId = detail.sectionId;
+      activateSection(targetSectionId, { openDrawer: true });
+      setType("highlight", targetSectionId);
+      setQuote(detail.text, targetSectionId);
+      setQuoteSource(targetSectionId, targetSectionId);
+      setBody("", targetSectionId);
       setFocusedNoteId(null);
       setDraftNoteIdsBySection((current) => {
         const next = { ...current };
-        delete next[sectionId];
+        delete next[targetSectionId];
         return next;
       });
       setMessage("Highlight selected. Add a note if you want.");
@@ -391,13 +393,14 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
       const note = Object.values(notesBySection).flat().find((item) => item.id === noteId);
       if (!note) return;
       event.preventDefault();
-      activateSection(getSourceSectionId(note), { openDrawer: true });
+      const targetSectionId = getSourceSectionId(note);
+      activateSection(targetSectionId, { openDrawer: true });
       setFocusedNoteId(note.id);
-      setType("highlight", sectionId);
-      setQuote(splitHighlightBody(note).highlight, sectionId);
-      setQuoteSource(getSourceSectionId(note), sectionId);
-      setBody(note.body, sectionId);
-      setDraftNoteIdsBySection((current) => ({ ...current, [sectionId]: note.id }));
+      setType("highlight", targetSectionId);
+      setQuote(splitHighlightBody(note).highlight, targetSectionId);
+      setQuoteSource(targetSectionId, targetSectionId);
+      setBody(note.body, targetSectionId);
+      setDraftNoteIdsBySection((current) => ({ ...current, [targetSectionId]: note.id }));
       setMessage("Editing the note attached to this highlight.");
       window.getSelection()?.removeAllRanges();
     }
@@ -659,6 +662,7 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">Reading notes</p>
             <p className="mt-1 line-clamp-2 text-sm font-medium text-stone-800">{sectionTitle}</p>
             <p className="mt-1 text-xs text-stone-500">Notes and highlights for this page</p>
+            <p className="mt-1 line-clamp-1 text-xs font-semibold text-amber-800">Adding to: {targetSectionTitle}</p>
           </div>
           <label className="sr-only" htmlFor={`progress-${sectionId}-${mobile ? "mobile" : "desktop"}`}>
             Learning state
@@ -725,7 +729,7 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
                   <span className="min-w-0 break-words">{noteKindLabel(note.type)}</span>
                   <span className="shrink-0">{formatDate(note.updatedAt)}</span>
                 </div>
-                <p className="mb-2 line-clamp-1 text-xs font-medium text-stone-500">{sourceTitle}</p>
+                <p className="mb-2 line-clamp-1 text-xs font-medium text-stone-500">Added to: {sourceTitle}</p>
                 {editingId === note.id ? (
                   <div className="grid gap-2">
                     {note.quote ? (

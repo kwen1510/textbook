@@ -70,7 +70,7 @@ export default async function CourseChapterPage({ params }: { params: Promise<{ 
   return (
     <AppChrome userEmail={user.email} sectionProgress={allSectionProgress}>
       <CourseLocationTracker chapterSlug={chapter.slug} />
-      <main className="mx-auto grid w-full max-w-[96rem] min-w-0 gap-6 overflow-x-clip px-4 pb-52 pt-8 sm:px-6 lg:grid-cols-[auto_minmax(0,1fr)] md:pb-16">
+      <main className="mx-auto grid w-full max-w-[96rem] min-w-0 gap-6 overflow-x-clip px-4 pb-52 pt-8 sm:px-6 md:pb-40">
         <ChapterNavigator key={chapter.slug} chapters={chapters.map((item) => ({ slug: item.slug, title: item.title, sectionIds: item.sections.map((section) => section.id) }))} currentSlug={chapter.slug} initialProgress={allSectionProgress} />
         <div className="min-w-0 overflow-x-clip">
           <div className="mb-6 overflow-hidden rounded-[2rem] border border-stone-200 bg-white/80 p-6">

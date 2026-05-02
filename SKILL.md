@@ -22,19 +22,21 @@ description: Use this skill when a user wants to turn a public GitHub repository
 
 ## UX Contract
 
-- Keep the reader mobile-first: sticky top app nav, chapter drawer from the header, no fixed bottom tab bar.
+- Keep the reader mobile-first: sticky top app nav, phone chapter drawer from the header, tablet/desktop floating chapter map, no fixed bottom tab bar.
 - Show chapter status dots in the chapter drawer/sidebar: unread, in progress, done, and for review.
 - The home page must show a clear resume target. If the latest viewed section is completed, continue to the next unfinished section after it; otherwise resume the latest viewed section.
 - Show section status dots/pills in the `On this chapter` rail.
 - Use one active `Reading notes` panel for the page. It follows the current section while the user scrolls.
 - On desktop, the notes panel stays fixed/sticky beside the reader. On mobile, it is a bottom dock that expands into a sheet.
+- On tablet/desktop, the chapter map should float in the bottom-right, expand/collapse, scroll independently, and stay above bottom navigation controls.
 - On desktop, align the notes panel with the first reader content card. Prefer sticky positioning inside the notes column over viewport-fixed positioning.
 - Do not put `self-start` on the sticky notes panel's grid item; the parent must stretch with the content row so sticky keeps following on long pages.
 - The notes sheet must close from the handle, close button, or outside tap, and it must not obscure next/previous navigation.
 - Auto-set unread sections to `currently viewing` when they enter the reading band.
 - Auto-complete sections after the user scrolls past them, unless the user manually resets the section.
 - `Next` and `Next chapter` must mark every section on the current chapter/page completed before navigating so the previous chapter status turns done.
-- Notes have two main modes: page notes and highlighted-text notes. The reading-notes panel is page-level, aggregates notes across the current chapter/page, and must not jump labels as sub-sections enter the viewport.
+- Notes have two main modes: page notes and highlighted-text notes. The reading-notes panel is page-level, aggregates notes across the current chapter/page, and must not jump its main page label as sub-sections enter the viewport.
+- New notes must be saved against the active section/subheading and saved note cards must show which section they were added to.
 - Store highlighted text separately from the note body and re-highlight saved text when the user returns. The selection toolbar should expose `Highlight`, not a confusing `Add note` action.
 - Restored highlights should be clickable/tappable and open the same highlight in the reading-notes editor without duplicating it elsewhere in the panel.
 - The mobile notes sheet should minimise from the handle/backdrop without a close button, and non-empty drafts should autosave without creating duplicate notes.
