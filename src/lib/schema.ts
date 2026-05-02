@@ -33,6 +33,7 @@ export const notes = pgTable("notes", {
   userId: text("user_id").notNull(),
   sectionId: text("section_id").notNull(),
   type: noteType("type").default("note").notNull(),
+  quote: text("quote"),
   body: text("body").notNull(),
   tags: text("tags").array().default([]).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -69,6 +70,22 @@ export const recallAttempts = pgTable("recall_attempts", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("recall_attempts_user_section_idx").on(table.userId, table.sectionId),
+]);
+
+export const reviewSchedules = pgTable("review_schedules", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull(),
+  sectionId: text("section_id").notNull(),
+  mode: text("mode").default("open").notNull(),
+  dueAt: timestamp("due_at", { withTimezone: true }).defaultNow().notNull(),
+  intervalDays: integer("interval_days").default(0).notNull(),
+  masteryScore: integer("mastery_score").default(0).notNull(),
+  attempts: integer("attempts").default(0).notNull(),
+  lastRating: text("last_rating"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("review_schedules_user_section_unique").on(table.userId, table.sectionId),
+  index("review_schedules_user_due_idx").on(table.userId, table.dueAt),
 ]);
 
 export const transcriptionJobs = pgTable("transcription_jobs", {

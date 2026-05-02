@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { readingNotesAddHighlightEvent } from "@/lib/reading-notes-events";
 
 type AssistantMessage = {
   role: "user" | "assistant";
@@ -93,7 +94,7 @@ export function CourseSelectionAssistant() {
       if (!rect.width && !rect.height) return;
 
       setSelectionState({
-        text: text.slice(0, 2000),
+        text: text.slice(0, 12000),
         sectionId: article.dataset.courseSectionId ?? "",
         sectionTitle: article.dataset.courseSectionTitle ?? "Current section",
         x: Math.min(Math.max(rect.left + rect.width / 2, 96), window.innerWidth - 96),
@@ -211,6 +212,7 @@ export function CourseSelectionAssistant() {
           return;
         }
         setMessages((current) => [...current, { role: "assistant", content: data.answer }]);
+        if (data.saved) setVoiceMessage("Saved to Notes for later review.");
       } catch {
         setError("Could not reach the study assistant. Check your connection and try again.");
       }
@@ -220,6 +222,19 @@ export function CourseSelectionAssistant() {
   function startChat() {
     openPanel();
     window.setTimeout(() => inputRef.current?.focus(), 50);
+  }
+
+  function addSelectionNote() {
+    if (!selectionState?.sectionId || !selectionState.text) return;
+    window.dispatchEvent(new CustomEvent(readingNotesAddHighlightEvent, {
+      detail: {
+        sectionId: selectionState.sectionId,
+        sectionTitle: selectionState.sectionTitle,
+        text: selectionState.text,
+      },
+    }));
+    setSelectionState(null);
+    window.getSelection()?.removeAllRanges();
   }
 
   async function startRecording() {
@@ -281,18 +296,21 @@ export function CourseSelectionAssistant() {
         <div
           className={
             isNarrowViewport
-              ? "fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+6.75rem)] z-[70] flex items-center justify-center gap-1 rounded-[1.25rem] border border-stone-200 bg-stone-950 p-1 text-sm font-semibold text-white shadow-2xl"
+              ? "fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+6.75rem)] z-[70] flex max-h-[35vh] flex-wrap items-center justify-center gap-1 overflow-auto rounded-[1.25rem] border border-stone-200 bg-stone-950 p-1 text-xs font-semibold text-white shadow-2xl sm:text-sm"
               : "fixed z-[60] flex max-w-[calc(100vw-1.5rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-1 rounded-full border border-stone-200 bg-stone-950 p-1 text-sm font-semibold text-white shadow-2xl"
           }
           style={isNarrowViewport ? undefined : { left: selectionState.x, top: selectionState.y }}
         >
-          <button onClick={() => askAssistant("explain")} className="rounded-full px-3 py-2 hover:bg-white/15">
+          <button onClick={() => askAssistant("explain")} className="shrink-0 rounded-full px-3 py-2 hover:bg-white/15">
             Explain
           </button>
-          <button onClick={startChat} className="rounded-full px-3 py-2 hover:bg-white/15">
+          <button onClick={startChat} className="shrink-0 rounded-full px-3 py-2 hover:bg-white/15">
             Chat
           </button>
-          <a href={googleSearchUrl} target="_blank" rel="noopener noreferrer" className="rounded-full px-3 py-2 hover:bg-white/15">
+          <button onClick={addSelectionNote} className="shrink-0 rounded-full px-3 py-2 hover:bg-white/15">
+            Add note
+          </button>
+          <a href={googleSearchUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 rounded-full px-3 py-2 hover:bg-white/15">
             Search web
           </a>
         </div>
@@ -301,21 +319,21 @@ export function CourseSelectionAssistant() {
       {panelOpen ? (
         <div className="fixed inset-0 z-[60] md:pointer-events-none">
           <button className="absolute inset-0 h-full w-full cursor-default bg-transparent md:hidden" aria-label="Minimize study assistant" onClick={() => setPanelOpen(false)} />
-          <aside className="pointer-events-auto fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] max-h-[76vh] overflow-hidden rounded-[1.75rem] border border-stone-200 bg-white shadow-2xl md:inset-x-auto md:right-6 md:bottom-6 md:w-[28rem]">
+          <aside className="pointer-events-auto fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] max-h-[76vh] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[1.75rem] border border-stone-200 bg-white shadow-2xl md:inset-x-auto md:right-6 md:bottom-6 md:w-[28rem]">
           <div className="border-b border-stone-200 bg-stone-50 p-4">
             <button type="button" className="mx-auto mb-3 block rounded-full px-8 py-2 md:hidden" aria-label="Minimize study assistant" onClick={() => setPanelOpen(false)}>
               <span className="block h-1.5 w-12 rounded-full bg-stone-300" />
             </button>
-            <div className="flex items-start justify-between gap-3">
-              <div>
+            <div className="flex min-w-0 items-start justify-between gap-3">
+              <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-700">Study assistant</p>
-                <h2 className="mt-1 line-clamp-1 font-semibold text-stone-950">{sectionTitle || "Course context"}</h2>
+                <h2 className="mt-1 line-clamp-1 break-words font-semibold text-stone-950">{sectionTitle || "Course context"}</h2>
               </div>
-              <button onClick={() => setPanelOpen(false)} className="rounded-full border border-stone-200 px-3 py-1 text-sm font-semibold text-stone-700">
+              <button onClick={() => setPanelOpen(false)} className="shrink-0 rounded-full border border-stone-200 px-3 py-1 text-sm font-semibold text-stone-700">
                 Close
               </button>
             </div>
-            <p className="mt-3 line-clamp-2 rounded-2xl bg-white px-3 py-2 text-sm text-stone-600">{selectedText || "Ask anything about the current page. The assistant uses the visible section and full chapter as context."}</p>
+            <p className="mt-3 line-clamp-2 rounded-2xl bg-white px-3 py-2 text-sm text-stone-600 break-words">{selectedText || "Ask anything about the current page. The assistant uses the visible section and full chapter as context."}</p>
           </div>
           <div className="max-h-[42vh] space-y-3 overflow-auto p-4">
             {!messages.length ? <p className="text-sm leading-6 text-stone-600">Select text and ask for an explanation, or type a follow-up question here.</p> : null}
@@ -331,7 +349,7 @@ export function CourseSelectionAssistant() {
             {voiceMessage ? <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm text-amber-900">{voiceMessage}</p> : null}
           </div>
           <form
-            className="flex gap-2 border-t border-stone-200 p-3"
+            className="flex flex-wrap gap-2 border-t border-stone-200 p-3 sm:flex-nowrap"
             onSubmit={(event) => {
               event.preventDefault();
               askAssistant("chat", question);
@@ -343,16 +361,16 @@ export function CourseSelectionAssistant() {
               onChange={(event) => setQuestion(event.target.value)}
               placeholder="Ask a follow-up..."
               rows={1}
-              className="max-h-28 min-h-11 min-w-0 flex-1 resize-none rounded-2xl border border-stone-200 px-4 py-2 text-sm leading-6 outline-none ring-amber-500 focus:ring-2"
+              className="max-h-28 min-h-11 min-w-0 flex-[1_1_100%] resize-none rounded-2xl border border-stone-200 px-4 py-2 text-sm leading-6 outline-none ring-amber-500 focus:ring-2 sm:flex-1"
             />
             <button
               type="button"
               onClick={recording ? stopRecording : startRecording}
-              className={`rounded-full px-4 py-2 text-sm font-semibold ${recording ? "bg-red-100 text-red-800" : "border border-stone-200 bg-white text-stone-800"}`}
+              className={`min-w-0 flex-1 rounded-full px-4 py-2 text-sm font-semibold sm:flex-none ${recording ? "bg-red-100 text-red-800" : "border border-stone-200 bg-white text-stone-800"}`}
             >
               {recording ? "Stop" : "Voice"}
             </button>
-            <button disabled={pending || !question.trim()} className="rounded-full bg-stone-950 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+            <button disabled={pending || !question.trim()} className="min-w-0 flex-1 rounded-full bg-stone-950 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 sm:flex-none">
               Send
             </button>
           </form>

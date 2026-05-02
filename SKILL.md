@@ -20,6 +20,21 @@ description: Use this skill when a user wants to turn a public GitHub repository
 11. Check no secrets or local config were added before committing.
 12. Tell the user to commit generated course files plus `textbook.config.json`, then set the required Neon/Vercel environment variables. Groq is optional unless the user wants AI assistant or voice transcription.
 
+## UX Contract
+
+- Keep the reader mobile-first: sticky top app nav, chapter drawer from the header, no fixed bottom tab bar.
+- Show chapter status dots in the chapter drawer/sidebar: unread, in progress, done, and for review.
+- Show section status dots/pills in the `On this chapter` rail.
+- Use one active `Reading notes` panel for the page. It follows the current section while the user scrolls.
+- On desktop, the notes panel stays fixed/sticky beside the reader. On mobile, it is a bottom dock that expands into a sheet.
+- The notes sheet must close from the handle, close button, or outside tap, and it must not obscure next/previous navigation.
+- Auto-set unread sections to `currently viewing` when they enter the reading band.
+- Auto-complete sections after the user scrolls past them, unless the user manually resets the section.
+- `Next` and `Next chapter` must mark the final section on the current page completed before navigating.
+- Notes have two main modes: page notes and highlighted-text notes. Store highlighted text separately from the note body and re-highlight saved text when the user returns.
+- Assistant explanations and selected terms should be saved as notes so the user can revisit them later.
+- Voice note buttons use a mic icon and visible recording state; tapping again stops recording.
+
 ## Safety Rules
 
 - Never commit `.env.local`, `.vercel`, `.next`, `node_modules`, API keys, database URLs, cookies, or local credentials.

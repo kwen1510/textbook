@@ -2,18 +2,21 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireApiUser, jsonError } from "@/lib/api";
 import { getChapter, getSection } from "@/lib/course";
+import { getDb } from "@/lib/db";
 import { getGroq, GROQ_STUDY_MODEL } from "@/lib/groq";
+import { ensureNotesSchema } from "@/lib/notes-schema";
+import { notes } from "@/lib/schema";
 
 const chatMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
-  content: z.string().min(1).max(2000),
+  content: z.string().min(1).max(6000),
 });
 
 const assistantSchema = z.object({
   mode: z.enum(["explain", "chat"]),
-  selectedText: z.string().trim().max(2000).default(""),
+  selectedText: z.string().trim().max(12000).default(""),
   sectionId: z.string().min(1),
-  question: z.string().trim().max(1000).optional(),
+  question: z.string().trim().max(6000).optional(),
   history: z.array(chatMessageSchema).max(8).default([]),
 });
 
@@ -27,12 +30,12 @@ function buildSystemPrompt(chapterTitle: string, sectionTitle: string, pageMarkd
     "You may add general background knowledge when it helps, but clearly prefer the course context.",
     `Current page: ${chapterTitle}`,
     `Current section: ${sectionTitle}`,
-    `Full page context:\n${pageMarkdown.slice(0, 12000)}`,
+    `Full page context:\n${pageMarkdown.slice(0, 30000)}`,
   ].join("\n\n");
 }
 
 export async function POST(request: Request) {
-  const { response } = await requireApiUser();
+  const { user, response } = await requireApiUser();
   if (response) return response;
 
   const parsed = assistantSchema.safeParse(await request.json());
@@ -58,17 +61,32 @@ export async function POST(request: Request) {
     const completion = await getGroq().chat.completions.create({
       model: GROQ_STUDY_MODEL,
       temperature: 0.2,
-      max_completion_tokens: 700,
+      max_completion_tokens: 1200,
       messages: [
         { role: "system", content: buildSystemPrompt(chapter.title, section.title, pageMarkdown) },
         ...parsed.data.history,
         { role: "user", content: userMessage },
       ],
     });
+    const answer = completion.choices[0]?.message?.content ?? "I could not generate an explanation.";
+
+    await ensureNotesSchema();
+    await getDb().insert(notes).values({
+      userId: user.id,
+      sectionId: section.id,
+      type: "question",
+      quote: parsed.data.selectedText || parsed.data.question || null,
+      body: [
+        parsed.data.mode === "explain" ? `Question: Explain ${parsed.data.selectedText}` : `Question: ${parsed.data.question}`,
+        `Answer: ${answer}`,
+      ].join("\n\n"),
+      tags: ["assistant", parsed.data.mode],
+    });
 
     return NextResponse.json({
-      answer: completion.choices[0]?.message?.content ?? "I could not generate an explanation.",
+      answer,
       model: GROQ_STUDY_MODEL,
+      saved: true,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Study assistant failed.";
