@@ -66,8 +66,16 @@ export default async function Home() {
             {continueLocation ? (
               <div className="mt-6 max-w-2xl rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-300">Resume point · {resumeState}</p>
-                <p className="mt-2 text-lg font-semibold text-white">{continueLocation.section.title}</p>
-                <p className="mt-1 text-sm text-stone-400">{continueLocation.chapter.title}</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+                  <div className="min-w-0">
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-stone-500">Page</p>
+                    <p className="mt-1 break-words text-sm font-semibold text-stone-200">{continueLocation.chapter.title}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-stone-500">Section</p>
+                    <p className="mt-1 break-words text-lg font-semibold text-white">{continueLocation.section.title}</p>
+                  </div>
+                </div>
               </div>
             ) : null}
           </div>
