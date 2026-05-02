@@ -4,6 +4,8 @@ Textbook is a reusable private course-app template. Fork it, open it in Codex, p
 
 Textbook is for personal, educational, nonprofit, and other noncommercial use only. It does not grant rights to third-party content. Only ingest content you own, have permission to use, or whose license allows the transformation you plan to make.
 
+Textbook stops ingestion of public repositories with no detected license by default. This is intentional: public GitHub access is not the same as permission to copy, adapt, or deploy content.
+
 ## Use With Codex
 
 1. Fork this repo, then clone your fork.
@@ -49,11 +51,11 @@ Deploy to Vercel after setting the same environment variables in Project Setting
 
 ## Source Attribution
 
-After ingestion, `ACKNOWLEDGEMENTS.md` is updated with the source repository, commit, and detected license file when available. Check the upstream license before publishing transformed content.
+After ingestion, `ACKNOWLEDGEMENTS.md` is updated with the source repository, commit, and detected license file when available. Check the upstream license before publishing transformed content. If Textbook cannot detect a license, ingestion stops unless you explicitly bypass the gate for content you are authorized to use.
 
 ## Responsible Use
 
-Use Textbook private-by-default. Do not publish generated content unless the source license or written permission allows redistribution and derivative works. See [CONTENT_POLICY.md](CONTENT_POLICY.md) before ingesting another repository.
+Use Textbook private-by-default. Do not publish generated content unless the source license or written permission allows redistribution and derivative works. See [CONTENT_POLICY.md](CONTENT_POLICY.md) and [PUBLISHING_CHECKLIST.md](PUBLISHING_CHECKLIST.md) before ingesting another repository or sharing a generated app.
 
 ## License
 

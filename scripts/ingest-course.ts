@@ -196,10 +196,38 @@ function discoverMarkdownFiles() {
   });
 }
 
+function findLicenseFile() {
+  return walkFiles().find((file) => /^(license|licence|copying)(\.|$)/i.test(path.basename(file)));
+}
+
+function classifyLicense(licenseFile: string) {
+  const text = readFileSync(path.join(sourceDir, licenseFile), "utf8").toLowerCase();
+  if (text.includes("creative commons attribution 4.0") || text.includes("cc by 4.0")) return "CC BY 4.0 attribution license";
+  if (text.includes("creative commons attribution-noncommercial") || text.includes("cc by-nc")) return "Creative Commons noncommercial license";
+  if (text.includes("mit license")) return "MIT license";
+  if (text.includes("apache license") && text.includes("version 2.0")) return "Apache-2.0 license";
+  if (text.includes("bsd")) return "BSD-style license";
+  if (text.includes("gnu general public license") || text.includes("gpl")) return "GPL-family copyleft license";
+  return "license file detected; review terms manually";
+}
+
 function detectLicense() {
-  const licenseFile = walkFiles().find((file) => /^(license|licence|copying)(\.|$)/i.test(path.basename(file)));
+  const licenseFile = findLicenseFile();
   if (!licenseFile) return "Source license not detected. Check the upstream repository before publishing transformed content.";
-  return licenseFile;
+  return `${licenseFile} (${classifyLicense(licenseFile)})`;
+}
+
+function enforceSourceLicenseGate(license: string) {
+  if (!sourceRepoUrl || !license.toLowerCase().includes("not detected")) return;
+  if (process.env.TEXTBOOK_ALLOW_UNLICENSED_SOURCE === "true") {
+    console.warn("Warning: TEXTBOOK_ALLOW_UNLICENSED_SOURCE=true bypassed the no-license safety gate. Keep the generated course private unless you have permission.");
+    return;
+  }
+  throw new Error([
+    "No source license was detected.",
+    "Textbook does not ingest unlicensed public repositories by default because public GitHub access is not the same as permission to copy, adapt, or deploy content.",
+    "Use content you own, choose a source with a clear license, get written permission, or set TEXTBOOK_ALLOW_UNLICENSED_SOURCE=true only for private content you are authorized to use.",
+  ].join("\n"));
 }
 
 function blobUrl(relativePath: string) {
@@ -454,6 +482,7 @@ async function main() {
     license: detectLicense(),
     generatedAt: "deterministic-build-artifact",
   };
+  enforceSourceLicenseGate(source.license);
   if (source.license.toLowerCase().includes("not detected")) {
     console.warn("Warning: no source license was detected. Keep the generated course private unless you have permission to use and redistribute the content.");
   }

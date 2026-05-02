@@ -12,10 +12,11 @@ description: Use this skill when a user wants to turn a public GitHub repository
 3. Inspect the source repository license before ingestion. If no license is present, or the license does not clearly allow the requested copying/transformation/deployment, stop and explain the risk.
 4. Run `npm run ingest -- <repo-url>` from the repo root.
 5. Review generated `src/generated/course.json`, `textbook.config.json`, and `ACKNOWLEDGEMENTS.md` for correct attribution.
-6. Update branding to the requested app name if it differs from `Textbook`.
-7. Run `npm test`, `npm run lint`, and `npm run build`.
-8. Check no secrets or local config were added before committing.
-9. Tell the user to commit generated course files plus `textbook.config.json`, then set the required Neon, Groq, and Vercel environment variables.
+6. Review `PUBLISHING_CHECKLIST.md` with the generated course context.
+7. Update branding to the requested app name if it differs from `Textbook`.
+8. Run `npm test`, `npm run lint`, and `npm run build`.
+9. Check no secrets or local config were added before committing.
+10. Tell the user to commit generated course files plus `textbook.config.json`, then set the required Neon, Groq, and Vercel environment variables.
 
 ## Safety Rules
 
@@ -25,6 +26,7 @@ description: Use this skill when a user wants to turn a public GitHub repository
 - Textbook is for personal, educational, nonprofit, and other noncommercial use only.
 - Keep generated apps private by default unless the source license or written permission allows public redistribution.
 - The Textbook license covers the app shell only; it does not grant rights to any source content.
+- Do not bypass the no-license ingestion gate unless the user confirms they own the content or have written permission.
 - If the source repo is not Markdown-heavy, explain that a custom adapter may be needed before proceeding.
 
 ## Quality Checks
