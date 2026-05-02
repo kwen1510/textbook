@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Textbook logo">
+  <defs>
+    <linearGradient id="bg" x1="82" x2="430" y1="62" y2="450" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2a211d"/>
+      <stop offset="1" stop-color="#0c0a09"/>
+    </linearGradient>
+    <linearGradient id="page" x1="142" x2="386" y1="117" y2="384" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff7ed"/>
+      <stop offset="1" stop-color="#f8e7c5"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="161" x2="344" y1="104" y2="397" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#92400e"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="118" fill="url(#bg)"/>
+  <path d="M150 126c0-18 15-33 33-33h162c29 0 52 23 52 52v247c0 13-10 23-23 23H180c-39 0-70-31-70-70V166c0-22 18-40 40-40Z" fill="#0c0a09" opacity=".35"/>
+  <path d="M138 111c0-20 16-36 36-36h174c31 0 56 25 56 56v253c0 10-8 18-18 18H172c-36 0-66-30-66-66V143c0-18 14-32 32-32Z" fill="url(#edge)"/>
+  <path d="M162 105h181c15 0 27 12 27 27v221H162c-19 0-36 8-48 21V153c0-27 21-48 48-48Z" fill="url(#page)"/>
+  <path d="M162 353h208v49H162c-14 0-25-11-25-25s11-24 25-24Z" fill="#fffaf0"/>
+  <path d="M168 365h189" stroke="#d6d3d1" stroke-width="10" stroke-linecap="round"/>
+  <path d="M180 152h137M180 194h132M180 236h91" stroke="#78350f" stroke-width="17" stroke-linecap="round"/>
+  <path d="M342 105v248" stroke="#d97706" stroke-width="10" stroke-linecap="round" opacity=".55"/>
+</svg>

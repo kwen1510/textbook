@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f6f0e7;
+  --foreground: #1c1917;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "IBM Plex Sans", "IBM Plex Sans Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", ui-monospace, monospace;
+  --font-display: "Fraunces", "Fraunces Fallback", Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background: var(--background);
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(245, 158, 11, 0.22), transparent 30rem),
+    radial-gradient(circle at 90% 20%, rgba(28, 25, 23, 0.12), transparent 28rem),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+.course-prose {
+  color: #292524;
+  font-size: 1rem;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.course-prose h2,
+.course-prose h3 {
+  scroll-margin-top: 7rem;
+  font-family: var(--font-display);
+  letter-spacing: -0.035em;
+  color: #1c1917;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.course-prose h2 {
+  margin-top: 0;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1;
+}
+
+.course-prose h3 {
+  margin-top: 2rem;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  line-height: 1.1;
+}
+
+.course-prose p,
+.course-prose ul,
+.course-prose ol,
+.course-prose table,
+.course-prose blockquote,
+.course-prose pre {
+  margin-top: 1rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.course-prose a {
+  color: #92400e;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.course-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(120, 113, 108, 0.25);
+  background: white;
+  padding: 0.5rem;
+}
+
+.course-prose pre {
+  overflow-x: auto;
+  max-width: 100%;
+  border-radius: 1rem;
+  background: #1c1917;
+  padding: 1rem;
+  color: #fafaf9;
+}
+
+.course-prose code {
+  font-family: var(--font-mono);
+}
+
+.course-prose :not(pre) > code {
+  border-radius: 0.4rem;
+  background: #e7e5e4;
+  padding: 0.1rem 0.35rem;
+  color: #7c2d12;
+}
+
+.course-prose table {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  -webkit-overflow-scrolling: touch;
+}
+
+.course-prose th,
+.course-prose td {
+  border: 1px solid #d6d3d1;
+  padding: 0.65rem;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.course-prose blockquote {
+  border-left: 4px solid #d97706;
+  border-radius: 0 1rem 1rem 0;
+  background: rgba(245, 158, 11, 0.08);
+  padding: 1rem 1.25rem;
+}
+
+.assistant-markdown > * + * {
+  margin-top: 0.75rem;
+}
+
+.assistant-markdown p {
+  white-space: pre-wrap;
+}
+
+.assistant-markdown strong {
+  font-weight: 750;
+  color: #1c1917;
+}
+
+.assistant-markdown-dark strong {
+  color: #ffffff;
+}
+
+.assistant-markdown ul,
+.assistant-markdown ol {
+  padding-left: 1.25rem;
+}
+
+.assistant-markdown ul {
+  list-style: disc;
+}
+
+.assistant-markdown ol {
+  list-style: decimal;
+}
+
+.assistant-markdown li + li {
+  margin-top: 0.4rem;
+}
+
+.assistant-markdown code {
+  border-radius: 0.45rem;
+  background: rgba(28, 25, 23, 0.08);
+  padding: 0.1rem 0.35rem;
+  font-size: 0.9em;
+}
+
+.assistant-markdown pre {
+  overflow-x: auto;
+  border-radius: 0.9rem;
+  background: #1c1917;
+  padding: 0.85rem;
+  color: #fafaf9;
+}
+
+.assistant-markdown pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.assistant-markdown a {
+  font-weight: 700;
+  color: #92400e;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.assistant-markdown-dark a {
+  color: #fbbf24;
+}

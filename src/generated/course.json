@@ -1,0 +1,32 @@
+{
+  "source": {
+    "repository": "No source repository ingested yet",
+    "commit": "placeholder",
+    "license": "Source license not detected yet",
+    "generatedAt": "deterministic-build-artifact"
+  },
+  "chapters": [
+    {
+      "id": "welcome",
+      "title": "Welcome to Textbook",
+      "slug": "welcome",
+      "order": 0,
+      "sourcePath": "placeholder",
+      "description": "A placeholder course that is replaced after ingestion.",
+      "sections": [
+        {
+          "id": "welcome:welcome-to-textbook",
+          "chapterSlug": "welcome",
+          "title": "Welcome to Textbook",
+          "slug": "welcome-to-textbook",
+          "level": 1,
+          "order": 0,
+          "sourcePath": "placeholder",
+          "markdown": "# Welcome to Textbook\n\nAdd a public GitHub repository with Markdown content, then run `npm run ingest -- <repo-url>`.\n",
+          "html": "<h1 id=\"welcome-to-textbook\">Welcome to Textbook</h1>\n<p>Add a public GitHub repository with Markdown content, then run <code>npm run ingest -- &lt;repo-url&gt;</code>.</p>\n<p><a href=\"https://github.com/kwen1510/textbook\" target=\"_blank\" rel=\"noopener noreferrer\">Textbook template</a></p>",
+          "recallPrompt": "Explain what this course will help you learn once content is ingested."
+        }
+      ]
+    }
+  ]
+}
