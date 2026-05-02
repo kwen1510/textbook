@@ -138,7 +138,7 @@ function markFirstTextMatch(container: HTMLElement, noteId: string, quote: strin
 
 function openDraftDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open("textbook", 1);
+    const request = indexedDB.open("system-design-primer-course", 1);
     request.onupgradeneeded = () => request.result.createObjectStore("drafts");
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
@@ -779,12 +779,12 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
   if (!pageSection) return null;
 
   return (
-    <aside className="min-w-0 xl:min-h-full xl:w-96">
+    <aside className="contents">
       {!drawerOpen ? (
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-[45] max-w-[calc(100vw-2rem)] rounded-t-[1.75rem] rounded-b-[1.1rem] border border-stone-200 bg-white/95 px-4 py-3 text-left shadow-2xl shadow-stone-900/15 backdrop-blur xl:hidden"
+          className="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-[45] max-w-[calc(100vw-2rem)] rounded-t-[1.75rem] rounded-b-[1.1rem] border border-stone-200 bg-white/95 px-4 py-3 text-left shadow-2xl shadow-stone-900/15 backdrop-blur md:left-auto md:right-6 md:w-[min(28rem,calc(100vw-3rem))]"
           aria-expanded={false}
         >
           <span className="mx-auto mb-2 block h-1.5 w-12 rounded-full bg-stone-300" />
@@ -799,9 +799,9 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
       ) : null}
 
       {drawerOpen ? (
-        <div className="fixed inset-0 z-50 xl:hidden" role="dialog" aria-modal="true" aria-label={`Reading notes for ${sectionTitle}`}>
+        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={`Reading notes for ${sectionTitle}`}>
           <button className="absolute inset-0 h-full w-full cursor-default bg-transparent" aria-label="Minimize reading notes" onClick={minimizeDrawer} />
-          <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] max-h-[82vh] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[1.75rem] border border-stone-200 bg-white shadow-2xl">
+          <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] max-h-[82vh] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[1.75rem] border border-stone-200 bg-white shadow-2xl md:inset-x-auto md:right-6 md:w-[min(30rem,calc(100vw-3rem))] md:max-h-[min(44rem,calc(100dvh-3rem))]">
             <div className="p-4 pb-0">
               <button type="button" className="mx-auto block rounded-full px-8 py-2" aria-label="Minimize reading notes" onClick={minimizeDrawer}>
                 <span className="block h-1.5 w-12 rounded-full bg-stone-300" />
@@ -823,10 +823,6 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
           </div>
         </div>
       ) : null}
-
-      <div className="hidden max-h-[calc(100vh-6.5rem)] overflow-auto rounded-[1.5rem] border border-stone-200 bg-white/90 p-4 shadow-sm xl:sticky xl:top-[5.75rem] xl:block">
-        {renderPanelBody()}
-      </div>
     </aside>
   );
 }

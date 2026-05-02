@@ -68,38 +68,29 @@ export function ChapterDrawer({ chapters, currentSlug, initialProgress, open, on
 }
 
 export function ChapterNavigator({ chapters, currentSlug, initialProgress }: { chapters: ChapterNavItem[]; currentSlug: string; initialProgress: Record<string, ProgressState | undefined> }) {
-  const [desktopOpen, setDesktopOpen] = useState(false);
+  const [desktopOpen, setDesktopOpen] = useState(true);
 
   return (
-    <aside className="pointer-events-none fixed bottom-[calc(env(safe-area-inset-bottom)+5rem)] right-4 z-[46] hidden md:block lg:right-6" aria-label="Course chapters">
-      {desktopOpen ? (
-        <div className="pointer-events-auto flex max-h-[min(38rem,calc(100dvh-8rem))] w-[min(22rem,calc(100vw-2rem))] min-h-0 flex-col overflow-hidden rounded-[1.5rem] border border-stone-200 bg-white/95 shadow-2xl shadow-stone-900/20 backdrop-blur">
-          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-stone-100 p-3">
-            <p className="min-w-0 truncate text-xs font-semibold uppercase tracking-[0.25em] text-stone-500">Chapters</p>
-            <button
-              type="button"
-              onClick={() => setDesktopOpen(false)}
-              className="grid size-10 shrink-0 place-items-center rounded-full border border-stone-200 bg-white text-stone-700 hover:border-amber-500 hover:text-amber-800"
-              aria-label="Collapse chapters"
-              aria-expanded={desktopOpen}
-            >
-              <MenuIcon className="size-4" />
-            </button>
-          </div>
-          <ChapterLinks chapters={chapters} currentSlug={currentSlug} initialProgress={initialProgress} scrollable />
+    <aside className={`${desktopOpen ? "w-64 xl:w-72" : "w-16"} hidden min-w-0 shrink-0 transition-[width] duration-200 md:block`} aria-label="Course chapters">
+      <div className="sticky top-[5.75rem] flex max-h-[calc(100dvh-6.5rem)] min-h-0 flex-col overflow-hidden rounded-[1.5rem] border border-stone-200 bg-white/75 shadow-sm">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-stone-100 p-3">
+          {desktopOpen ? <p className="min-w-0 truncate text-xs font-semibold uppercase tracking-[0.25em] text-stone-500">Chapters</p> : <span className="sr-only">Chapters collapsed</span>}
+          <button
+            type="button"
+            onClick={() => setDesktopOpen((open) => !open)}
+            className="grid size-10 shrink-0 place-items-center rounded-full border border-stone-200 bg-white text-stone-700 hover:border-amber-500 hover:text-amber-800"
+            aria-label={desktopOpen ? "Collapse chapters" : "Expand chapters"}
+            aria-expanded={desktopOpen}
+          >
+            <MenuIcon className="size-4" />
+          </button>
         </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setDesktopOpen(true)}
-          className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-stone-200 bg-stone-950 px-4 py-3 text-sm font-semibold text-white shadow-2xl shadow-stone-900/25 transition hover:-translate-y-0.5 hover:bg-stone-800"
-          aria-label="Expand chapters"
-          aria-expanded={desktopOpen}
-        >
-          <MenuIcon className="size-4" />
-          <span>Chapters</span>
-        </button>
-      )}
+        {desktopOpen ? (
+          <ChapterLinks chapters={chapters} currentSlug={currentSlug} initialProgress={initialProgress} scrollable />
+        ) : (
+          <CollapsedChapterLinks chapters={chapters} currentSlug={currentSlug} initialProgress={initialProgress} />
+        )}
+      </div>
     </aside>
   );
 }
@@ -145,6 +136,30 @@ function ChapterLinks({ chapters, currentSlug, initialProgress, onNavigate, scro
         );
       })}
     </nav>
+  );
+}
+
+function CollapsedChapterLinks({ chapters, currentSlug, initialProgress }: { chapters: ChapterNavItem[]; currentSlug: string; initialProgress: Record<string, ProgressState | undefined> }) {
+  const progressBySection = useLiveProgress(initialProgress);
+  return (
+    <div className="grid gap-2 overflow-y-auto p-2">
+      {chapters.map((item, index) => {
+        const status = getChapterStatus(item.sectionIds, progressBySection);
+        const meta = statusMeta[status];
+        const active = item.slug === currentSlug;
+        return (
+          <Link
+            key={item.slug}
+            href={`/course/${item.slug}`}
+            className={`relative grid size-11 place-items-center rounded-xl text-sm font-semibold ${active ? "bg-stone-950 text-white" : "bg-white text-stone-600 hover:bg-stone-100 hover:text-stone-950"}`}
+            title={`${item.title} · ${meta.label}`}
+          >
+            {index + 1}
+            <span className={`absolute right-1.5 top-1.5 size-2.5 rounded-full ring-2 ${active ? `ring-stone-950 ${meta.mutedDot}` : `ring-white ${meta.dot}`}`} aria-hidden="true" />
+          </Link>
+        );
+      })}
+    </div>
   );
 }
 

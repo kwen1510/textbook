@@ -22,15 +22,13 @@ description: Use this skill when a user wants to turn a public GitHub repository
 
 ## UX Contract
 
-- Keep the reader mobile-first: sticky top app nav, phone chapter drawer from the header, tablet/desktop floating chapter map, no fixed bottom tab bar.
+- Keep the reader mobile-first: sticky top app nav, phone chapter drawer from the header, tablet/desktop chapter rail on the left, no fixed bottom tab bar.
 - Show chapter status dots in the chapter drawer/sidebar: unread, in progress, done, and for review.
 - The home page must show a clear resume target. If the latest viewed section is completed, continue to the next unfinished section after it; otherwise resume the latest viewed section.
 - Show section status dots/pills in the `On this chapter` rail.
-- Use one active `Reading notes` panel for the page. It follows the current section while the user scrolls.
-- On desktop, the notes panel stays fixed/sticky beside the reader. On mobile, it is a bottom dock that expands into a sheet.
-- On tablet/desktop, the chapter map should float in the bottom-right, expand/collapse, scroll independently, and stay above bottom navigation controls.
-- On desktop, align the notes panel with the first reader content card. Prefer sticky positioning inside the notes column over viewport-fixed positioning.
-- Do not put `self-start` on the sticky notes panel's grid item; the parent must stretch with the content row so sticky keeps following on long pages.
+- Use one active `Reading notes` panel for the page. It opens from a collapsed bottom-right dock on tablet/desktop and from a bottom dock on phone.
+- On tablet/desktop, keep the chapter map in the left rail. The rail can collapse, but it should remain in the reader layout rather than becoming the bottom-right floating control.
+- On tablet/desktop, the reading-notes dock should float in the bottom-right, expand/collapse, and stay above bottom navigation controls.
 - The notes sheet must close from the handle, close button, or outside tap, and it must not obscure next/previous navigation.
 - Auto-set unread sections to `currently viewing` when they enter the reading band.
 - Auto-complete sections after the user scrolls past them, unless the user manually resets the section.
