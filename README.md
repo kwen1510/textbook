@@ -1,6 +1,6 @@
 # Textbook
 
-Textbook is a reusable private course-app template. Fork it, open your fork in Codex, paste a licensed public GitHub repository with course or documentation content, and Codex can turn that content into a deployable study app with reading, notes, progress, recall, and optional AI help.
+Textbook is a reusable private course-app template. Create your own copy, open it in Codex, paste a licensed public GitHub repository with course or documentation content, and Codex can turn that content into a deployable study app with reading, notes, progress, recall, and optional AI help.
 
 Textbook is for personal, educational, nonprofit, and other noncommercial use only. It does not grant rights to third-party content. Only ingest content you own, have permission to use, or whose license allows the transformation you plan to make.
 
@@ -8,25 +8,31 @@ Textbook stops ingestion of public repositories with no detected license by defa
 
 ## Use With Codex
 
-Start with [QUICKSTART.md](QUICKSTART.md) if you want the full step-by-step flow.
+Fastest path:
 
-1. Fork `https://github.com/kwen1510/textbook` into your own GitHub account.
-2. Clone/open your fork in Codex. Do not work directly in the shared template repo.
-3. Do not fork the source/course repository unless you need to edit that source. Textbook only needs the public source URL.
-4. Paste this prompt:
+1. Click **Use this template** or **Fork** on this repository.
+2. Open your new repository in Codex.
+3. Paste the prompt from [CODEX_PROMPT.md](CODEX_PROMPT.md).
+4. Replace `SOURCE_REPO_URL` and `APP_NAME`.
+5. Let Codex do the ingestion, checks, and build.
+
+You do not need to fork the source/course repository. Textbook only needs the public source URL.
+
+One-shot prompt:
 
 ```text
 Read SKILL.md first and follow the textbook-template workflow in this repository.
 
-I am working in my own fork of Textbook. Use this Textbook template to create a private, noncommercial study app from this public GitHub repository:
+Create my private, noncommercial Textbook study app.
 
-SOURCE_REPO_URL=<paste public GitHub repo URL here>
-APP_NAME=<your app name>
+Required:
+- SOURCE_REPO_URL=<paste public GitHub repo URL here>
+- APP_NAME=<your app name>
 
-Before ingesting, check the source repository license. If the license is missing, unclear, or does not allow copying/adaptation/deployment for this use, stop and explain the issue.
-
-If the source is allowed, run the full workflow: install dependencies if needed, ingest the source repo, preserve attribution in ACKNOWLEDGEMENTS.md, verify generated links/assets, run tests/lint/build, check for secrets, and tell me the exact Neon, Groq, and Vercel setup steps.
+Use the safest defaults. Check the source license before ingesting. If allowed, ingest the source, preserve attribution, run tests/lint/build, check for secrets, and tell me the remaining Neon, Groq, and Vercel setup steps.
 ```
+
+See [QUICKSTART.md](QUICKSTART.md) for the full flow.
 
 ## Local Setup
 
@@ -38,7 +44,7 @@ npm run db:migrate
 npm run dev
 ```
 
-Required environment variables:
+Environment variables for the full private synced app:
 
 ```bash
 DATABASE_URL="postgresql://USER:PASSWORD@HOST/neondb?sslmode=require"
@@ -51,7 +57,7 @@ GROQ_STUDY_MODEL="llama-3.1-8b-instant"
 SOURCE_REPO_URL="https://github.com/org/repo"
 ```
 
-`GROQ_STUDY_MODEL` defaults to `llama-3.1-8b-instant`. You can change it to another Groq chat model if you want a different cost, speed, or quality tradeoff.
+Groq is optional. Without `GROQ_API_KEY`, the core reading, notes, progress, and review features still work. `GROQ_STUDY_MODEL` defaults to `llama-3.1-8b-instant`; you can change it to another Groq chat model if you want a different cost, speed, or quality tradeoff.
 
 ## Deploy
 

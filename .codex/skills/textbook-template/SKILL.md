@@ -7,9 +7,9 @@ description: Use this skill when a user wants to turn a public GitHub repository
 
 ## Workflow
 
-1. Confirm the user is working in their own fork of the Textbook template, not the shared `kwen1510/textbook` template repository.
+1. Confirm the user is working in their own Textbook copy/fork/template repo, not the shared `kwen1510/textbook` template repository.
 2. Confirm the user provided a source repository URL and app name.
-3. Explain the repository model if needed: fork Textbook, do not fork the source repo by default, ingest the source URL into the Textbook fork.
+3. Explain the repository model if needed: copy/fork/use-template Textbook, do not fork the source repo by default, ingest the source URL into the Textbook copy.
 4. Inspect the source repository license before ingestion. If no license is present, or the license does not clearly allow the requested copying/transformation/deployment, stop and explain the risk.
 5. Run `npm install` if dependencies are missing.
 6. Run `npm run ingest -- <repo-url>` from the repo root.
@@ -18,7 +18,7 @@ description: Use this skill when a user wants to turn a public GitHub repository
 9. Update branding to the requested app name if it differs from `Textbook`.
 10. Run `npm test`, `npm run lint`, and `npm run build`.
 11. Check no secrets or local config were added before committing.
-12. Tell the user to commit generated course files plus `textbook.config.json`, then set the required Neon, Groq, and Vercel environment variables.
+12. Tell the user to commit generated course files plus `textbook.config.json`, then set the required Neon/Vercel environment variables. Groq is optional unless the user wants AI assistant or voice transcription.
 
 ## Safety Rules
 
@@ -55,4 +55,5 @@ Only placeholder documentation hits are acceptable.
 - Build command: `npm run build`.
 - Required env vars: `DATABASE_URL`, `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET`, `ALLOWED_USER_EMAIL`, `GROQ_API_KEY`.
 - Optional env var: `GROQ_STUDY_MODEL`; default is `llama-3.1-8b-instant`, but the user can swap to another Groq chat model.
+- Optional env var: `GROQ_API_KEY`; required only for AI assistant and voice transcription.
 - Voice transcription model is `whisper-large-v3-turbo`.
