@@ -1,6 +1,6 @@
 # Textbook
 
-Textbook is a reusable private course-app template. Fork it, open it in Codex, paste a public GitHub repository with course or documentation content, and Codex can turn that content into a deployable study app with reading, notes, progress, recall, and optional AI help.
+Textbook is a reusable private course-app template. Fork it, open your fork in Codex, paste a licensed public GitHub repository with course or documentation content, and Codex can turn that content into a deployable study app with reading, notes, progress, recall, and optional AI help.
 
 Textbook is for personal, educational, nonprofit, and other noncommercial use only. It does not grant rights to third-party content. Only ingest content you own, have permission to use, or whose license allows the transformation you plan to make.
 
@@ -8,18 +8,24 @@ Textbook stops ingestion of public repositories with no detected license by defa
 
 ## Use With Codex
 
-1. Fork this repo, then clone your fork.
-2. Work in your own fork. Generated course content, deployment configuration, and database setup should belong to your fork, not this shared template.
-3. Open your fork in Codex.
+Start with [QUICKSTART.md](QUICKSTART.md) if you want the full step-by-step flow.
+
+1. Fork `https://github.com/kwen1510/textbook` into your own GitHub account.
+2. Clone/open your fork in Codex. Do not work directly in the shared template repo.
+3. Do not fork the source/course repository unless you need to edit that source. Textbook only needs the public source URL.
 4. Paste this prompt:
 
 ```text
-Use this Textbook template to create a private course app from this public GitHub repo:
+Read SKILL.md first and follow the textbook-template workflow in this repository.
+
+I am working in my own fork of Textbook. Use this Textbook template to create a private, noncommercial study app from this public GitHub repository:
 
 SOURCE_REPO_URL=<paste public GitHub repo URL here>
 APP_NAME=<your app name>
 
-Please check the source license first. If the source license is missing, unclear, or does not allow this kind of noncommercial private study transformation, stop and explain the issue. Otherwise ingest the content, preserve attribution, run tests/build, and tell me the Neon, Groq, and Vercel setup steps.
+Before ingesting, check the source repository license. If the license is missing, unclear, or does not allow copying/adaptation/deployment for this use, stop and explain the issue.
+
+If the source is allowed, run the full workflow: install dependencies if needed, ingest the source repo, preserve attribution in ACKNOWLEDGEMENTS.md, verify generated links/assets, run tests/lint/build, check for secrets, and tell me the exact Neon, Groq, and Vercel setup steps.
 ```
 
 ## Local Setup
@@ -45,9 +51,11 @@ GROQ_STUDY_MODEL="llama-3.1-8b-instant"
 SOURCE_REPO_URL="https://github.com/org/repo"
 ```
 
+`GROQ_STUDY_MODEL` defaults to `llama-3.1-8b-instant`. You can change it to another Groq chat model if you want a different cost, speed, or quality tradeoff.
+
 ## Deploy
 
-Deploy to Vercel after setting the same environment variables in Project Settings. `npm run ingest -- <repo-url>` writes `textbook.config.json` with the public source URL; commit that file with the generated course so Vercel can re-ingest on build. Alternatively, set `SOURCE_REPO_URL` in Vercel. Run `npm run build` locally before deploying.
+Deploy your fork to Vercel after setting the same environment variables in Project Settings. Import the forked repository, keep the root directory as the repository root, and use the default Next.js settings. `npm run ingest -- <repo-url>` writes `textbook.config.json` with the public source URL; commit that file with the generated course so Vercel can re-ingest on build. Alternatively, set `SOURCE_REPO_URL` in Vercel. Run `npm run build` locally before deploying.
 
 ## Source Attribution
 
