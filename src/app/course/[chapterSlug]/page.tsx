@@ -88,13 +88,15 @@ export default async function CourseChapterPage({ params }: { params: Promise<{ 
           <SectionProgressNav sections={chapter.sections.map((section) => ({ id: section.id, slug: section.slug, title: section.title }))} initialProgress={chapterProgress} />
           <div className="grid min-w-0 gap-8 xl:grid-cols-[minmax(0,1fr)_24rem]">
             <div className="grid min-w-0 gap-8">
-              {chapter.sections.map((section) => (
-                <section key={section.id} id={section.slug} className="min-w-0 scroll-mt-24">
-                  <article data-course-section-id={section.id} data-course-section-title={section.title} className="course-prose min-w-0 overflow-hidden rounded-[2rem] border border-stone-200 bg-white/90 p-5 shadow-sm sm:p-8" dangerouslySetInnerHTML={{ __html: section.html }} />
-                </section>
-              ))}
+              <div data-course-chapter-body="true" className="grid min-w-0 gap-8">
+                {chapter.sections.map((section) => (
+                  <section key={section.id} id={section.slug} className="min-w-0 scroll-mt-24">
+                    <article data-course-section-id={section.id} data-course-section-title={section.title} className="course-prose min-w-0 overflow-hidden rounded-[2rem] border border-stone-200 bg-white/90 p-5 shadow-sm sm:p-8" dangerouslySetInnerHTML={{ __html: section.html }} />
+                  </section>
+                ))}
+              </div>
             </div>
-            <NotePanel sections={notePanelSections} />
+            <NotePanel sections={notePanelSections} pageTitle={chapter.title} pageSectionId={chapter.sections[0]?.id} />
           </div>
           <CourseSelectionAssistant />
           <div className="mt-8 flex min-w-0 flex-wrap justify-between gap-3 rounded-[1.5rem] border border-stone-200 bg-white/80 p-4">

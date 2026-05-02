@@ -34,8 +34,9 @@ description: Use this skill when a user wants to turn a public GitHub repository
 - Auto-set unread sections to `currently viewing` when they enter the reading band.
 - Auto-complete sections after the user scrolls past them, unless the user manually resets the section.
 - `Next` and `Next chapter` must mark the final section on the current page completed before navigating.
-- Notes have two main modes: page notes and highlighted-text notes. Store highlighted text separately from the note body and re-highlight saved text when the user returns.
-- Restored highlights should be clickable/tappable and open the attached note in the reading-notes panel.
+- Notes have two main modes: page notes and highlighted-text notes. The reading-notes panel is page-level, aggregates notes across the current chapter/page, and must not jump labels as sub-sections enter the viewport.
+- Store highlighted text separately from the note body and re-highlight saved text when the user returns. The selection toolbar should expose `Highlight`, not a confusing `Add note` action.
+- Restored highlights should be clickable/tappable and open the same highlight in the reading-notes editor without duplicating it elsewhere in the panel.
 - The mobile notes sheet should minimise from the handle/backdrop without a close button, and non-empty drafts should autosave without creating duplicate notes.
 - Assistant explanations and selected terms should be saved as notes so the user can revisit them later.
 - Voice note buttons use a mic icon and visible recording state; tapping again stops recording. Use a subtle red glow for active recording, not a pulsing animation.

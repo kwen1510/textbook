@@ -31,6 +31,12 @@ type NotePanelSection = {
   initialProgress?: ProgressState;
 };
 
+type NotePanelProps = {
+  sections: NotePanelSection[];
+  pageTitle: string;
+  pageSectionId?: string;
+};
+
 const progressLabels: Record<ProgressState, string> = {
   unread: "Unread",
   reading: "Currently viewing",
@@ -177,12 +183,18 @@ function getInitialProgressBySection(sections: NotePanelSection[]) {
   return Object.fromEntries(sections.map((section) => [section.id, section.initialProgress ?? "unread"])) as Record<string, ProgressState>;
 }
 
-export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
+function getSourceSectionId(note: Note) {
+  return note.tags.find((tag) => tag.startsWith("source-section:"))?.replace("source-section:", "") ?? note.sectionId;
+}
+
+export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps) {
   const firstSectionId = sections[0]?.id ?? "";
-  const [activeSectionId, setActiveSectionId] = useState(firstSectionId);
+  const pageAnchorSectionId = pageSectionId || firstSectionId;
+  const [, setActiveSectionId] = useState(firstSectionId);
   const [notesBySection, setNotesBySection] = useState<Record<string, Note[]>>(() => getInitialNotesBySection(sections));
   const [draftsBySection, setDraftsBySection] = useState<Record<string, string>>({});
   const [quotesBySection, setQuotesBySection] = useState<Record<string, string>>({});
+  const [quoteSourcesBySection, setQuoteSourcesBySection] = useState<Record<string, string>>({});
   const [typeBySection, setTypeBySection] = useState<Record<string, Note["type"]>>({});
   const [progressBySection, setProgressBySection] = useState<Record<string, ProgressState>>(() => getInitialProgressBySection(sections));
   const [message, setMessage] = useState<string | null>(null);
@@ -201,18 +213,23 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
   const recordingSectionId = useRef<string>(firstSectionId);
   const chunks = useRef<Blob[]>([]);
 
-  const activeSection = useMemo(
-    () => sections.find((section) => section.id === activeSectionId) ?? sections[0],
-    [activeSectionId, sections],
+  const sectionTitleById = useMemo(() => Object.fromEntries(sections.map((section) => [section.id, section.title])) as Record<string, string>, [sections]);
+  const pageSection = useMemo(
+    () => sections.find((section) => section.id === pageAnchorSectionId) ?? sections[0],
+    [pageAnchorSectionId, sections],
   );
-  const sectionId = activeSection?.id ?? "";
-  const sectionTitle = activeSection?.title ?? "Reading notes";
-  const notes = notesBySection[sectionId] ?? [];
+  const sectionId = pageSection?.id ?? "";
+  const sectionTitle = pageTitle || pageSection?.title || "Reading notes";
+  const notes = useMemo(() => (
+    Object.values(notesBySection)
+      .flat()
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+  ), [notesBySection]);
   const body = draftsBySection[sectionId] ?? "";
   const quote = quotesBySection[sectionId] ?? "";
   const type = typeBySection[sectionId] ?? "note";
   const progress = progressBySection[sectionId] ?? "unread";
-  const focusedNote = focusedNoteId ? notes.find((note) => note.id === focusedNoteId) ?? null : null;
+  const visibleNotes = quote && focusedNoteId ? notes.filter((note) => note.id !== focusedNoteId) : notes;
 
   const setBody = useCallback((updater: string | ((current: string) => string), targetSectionId = sectionId) => {
     setDraftsBySection((current) => {
@@ -228,6 +245,10 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
 
   const setQuote = useCallback((nextQuote: string, targetSectionId = sectionId) => {
     setQuotesBySection((current) => ({ ...current, [targetSectionId]: nextQuote }));
+  }, [sectionId]);
+
+  const setQuoteSource = useCallback((nextSourceSectionId: string, targetSectionId = sectionId) => {
+    setQuoteSourcesBySection((current) => ({ ...current, [targetSectionId]: nextSourceSectionId }));
   }, [sectionId]);
 
   const persistProgress = useCallback((targetSectionId: string, nextState: ProgressState, options?: { silent?: boolean }) => {
@@ -249,10 +270,6 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
     if (!alreadyActive) {
       activeSectionRef.current = nextSectionId;
       setActiveSectionId(nextSectionId);
-      setMessage(null);
-      setEditingId(null);
-      setEditBody("");
-      setFocusedNoteId(null);
       window.dispatchEvent(new CustomEvent<ReadingNotesActiveDetail>(readingNotesActiveEvent, { detail: { sectionId: nextSectionId } }));
     }
     if (options?.openDrawer) setDrawerOpen(true);
@@ -332,26 +349,36 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
       const detail = (event as CustomEvent<ReadingNotesAddHighlightDetail>).detail;
       if (!detail?.sectionId || !detail.text) return;
       activateSection(detail.sectionId, { openDrawer: true });
-      setType("highlight", detail.sectionId);
-      setQuote(detail.text, detail.sectionId);
-      setBody("", detail.sectionId);
-      setMessage("Highlight attached. Add your note below, then save.");
+      setType("highlight", sectionId);
+      setQuote(detail.text, sectionId);
+      setQuoteSource(detail.sectionId, sectionId);
+      setBody("", sectionId);
+      setFocusedNoteId(null);
+      setDraftNoteIdsBySection((current) => {
+        const next = { ...current };
+        delete next[sectionId];
+        return next;
+      });
+      setMessage("Highlight selected. Add a note if you want.");
     }
 
     window.addEventListener(readingNotesAddHighlightEvent, handleAddHighlight);
     return () => window.removeEventListener(readingNotesAddHighlightEvent, handleAddHighlight);
-  }, [activateSection, setBody, setQuote, setType]);
+  }, [activateSection, sectionId, setBody, setQuote, setQuoteSource, setType]);
 
   useEffect(() => {
     unwrapExistingHighlights();
-    for (const [highlightSectionId, sectionNotes] of Object.entries(notesBySection)) {
-      const article = document.querySelector<HTMLElement>(`[data-course-section-id="${CSS.escape(highlightSectionId)}"]`);
-      if (!article) continue;
+    const chapterContainer = document.querySelector<HTMLElement>("[data-course-chapter-body='true']");
+    for (const sectionNotes of Object.values(notesBySection)) {
       const highlights = sectionNotes
         .filter((note) => note.type === "highlight")
         .map((note) => ({ note, quote: splitHighlightBody(note).highlight }))
         .filter((item) => item.quote);
-      for (const item of highlights.slice(0, 8)) markFirstTextMatch(article, item.note.id, item.quote, focusedNoteId === item.note.id);
+      for (const item of highlights.slice(0, 8)) {
+        const sourceSectionId = getSourceSectionId(item.note);
+        const sourceArticle = document.querySelector<HTMLElement>(`[data-course-section-id="${CSS.escape(sourceSectionId)}"]`);
+        markFirstTextMatch(sourceArticle ?? chapterContainer ?? document.body, item.note.id, item.quote, focusedNoteId === item.note.id);
+      }
     }
   }, [focusedNoteId, notesBySection]);
 
@@ -364,9 +391,14 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
       const note = Object.values(notesBySection).flat().find((item) => item.id === noteId);
       if (!note) return;
       event.preventDefault();
-      activateSection(note.sectionId, { openDrawer: true });
+      activateSection(getSourceSectionId(note), { openDrawer: true });
       setFocusedNoteId(note.id);
-      setMessage("Showing the note attached to this highlight.");
+      setType("highlight", sectionId);
+      setQuote(splitHighlightBody(note).highlight, sectionId);
+      setQuoteSource(getSourceSectionId(note), sectionId);
+      setBody(note.body, sectionId);
+      setDraftNoteIdsBySection((current) => ({ ...current, [sectionId]: note.id }));
+      setMessage("Editing the note attached to this highlight.");
       window.getSelection()?.removeAllRanges();
     }
 
@@ -381,13 +413,14 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
       document.removeEventListener("click", handleHighlightOpen);
       document.removeEventListener("keydown", handleHighlightKeydown);
     };
-  }, [activateSection, notesBySection]);
+  }, [activateSection, notesBySection, sectionId, setBody, setQuote, setQuoteSource, setType]);
 
   const upsertDraftNote = useCallback(async ({
     noteBody = body,
     noteType = type,
     targetSectionId = sectionId,
     noteQuote = quote,
+    sourceSectionId = quoteSourcesBySection[targetSectionId],
     clearDraft = false,
     silent = false,
   }: {
@@ -395,6 +428,7 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
     noteType?: Note["type"];
     targetSectionId?: string;
     noteQuote?: string;
+    sourceSectionId?: string;
     clearDraft?: boolean;
     silent?: boolean;
   } = {}) => {
@@ -406,7 +440,7 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
       body: noteBody,
       quote: noteQuote || undefined,
       type: noteQuote ? "highlight" : noteType,
-      tags: [],
+      tags: noteQuote && sourceSectionId ? [`source-section:${sourceSectionId}`] : [],
     };
 
     try {
@@ -434,23 +468,30 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
       });
 
       if (!draftNoteId) setDraftNoteIdsBySection((current) => ({ ...current, [targetSectionId]: data.note.id }));
+      if (noteQuote) setFocusedNoteId(data.note.id);
       if (!clearDraft) await deleteDraft(targetSectionId).catch(() => undefined);
       if (clearDraft) {
         setDraftsBySection((current) => ({ ...current, [targetSectionId]: "" }));
         setQuotesBySection((current) => ({ ...current, [targetSectionId]: "" }));
+        setQuoteSourcesBySection((current) => {
+          const next = { ...current };
+          delete next[targetSectionId];
+          return next;
+        });
         setDraftNoteIdsBySection((current) => {
           const next = { ...current };
           delete next[targetSectionId];
           return next;
         });
         setType("note", targetSectionId);
+        setFocusedNoteId(null);
         await deleteDraft(targetSectionId).catch(() => undefined);
       }
       if (!silent) setMessage("Saved.");
     } catch {
       if (!silent) setMessage("Could not save note. Check your connection and try again.");
     }
-  }, [body, draftNoteIdsBySection, quote, sectionId, setType, type]);
+  }, [body, draftNoteIdsBySection, quote, quoteSourcesBySection, sectionId, setType, type]);
 
   function saveNote(noteBody = body, noteType = type, targetSectionId = sectionId, noteQuote = quote) {
     startTransition(() => {
@@ -496,6 +537,7 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
   function saveEdit(noteId: string) {
     const noteBeingEdited = notes.find((note) => note.id === noteId);
     if (!editBody.trim() && !noteBeingEdited?.quote?.trim()) return;
+    const targetSectionId = noteBeingEdited?.sectionId ?? sectionId;
     setMessage(null);
     startTransition(async () => {
       try {
@@ -511,7 +553,7 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
         }
         setNotesBySection((current) => ({
           ...current,
-          [sectionId]: (current[sectionId] ?? []).map((note) => note.id === noteId ? { ...note, body: data.note.body, quote: data.note.quote, updatedAt: data.note.updatedAt } : note),
+          [targetSectionId]: (current[targetSectionId] ?? []).map((note) => note.id === noteId ? { ...note, body: data.note.body, quote: data.note.quote, updatedAt: data.note.updatedAt } : note),
         }));
         cancelEdit();
         setMessage("Note updated.");
@@ -523,6 +565,8 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
 
   function deleteSavedNote(noteId: string) {
     if (!window.confirm("Delete this note? This cannot be undone.")) return;
+    const noteBeingDeleted = notes.find((note) => note.id === noteId);
+    const targetSectionId = noteBeingDeleted?.sectionId ?? sectionId;
     setMessage(null);
     startTransition(async () => {
       try {
@@ -532,8 +576,13 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
           setMessage(data.error ?? "Could not delete note.");
           return;
         }
-        setNotesBySection((current) => ({ ...current, [sectionId]: (current[sectionId] ?? []).filter((note) => note.id !== noteId) }));
+        setNotesBySection((current) => ({ ...current, [targetSectionId]: (current[targetSectionId] ?? []).filter((note) => note.id !== noteId) }));
         if (editingId === noteId) cancelEdit();
+        if (focusedNoteId === noteId) {
+          setFocusedNoteId(null);
+          setQuote("");
+          setBody("");
+        }
         setMessage("Note deleted.");
       } catch {
         setMessage("Could not delete note. Check your connection and try again.");
@@ -609,6 +658,7 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">Reading notes</p>
             <p className="mt-1 line-clamp-2 text-sm font-medium text-stone-800">{sectionTitle}</p>
+            <p className="mt-1 text-xs text-stone-500">Notes and highlights for this page</p>
           </div>
           <label className="sr-only" htmlFor={`progress-${sectionId}-${mobile ? "mobile" : "desktop"}`}>
             Learning state
@@ -634,17 +684,10 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
             </button>
           </div>
         ) : null}
-        {focusedNote ? (
-          <div className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-amber-800">Attached highlight note</p>
-            {focusedNote.quote ? <p className="mt-2 max-h-24 overflow-auto whitespace-pre-wrap break-words text-sm leading-6 text-amber-950">{focusedNote.quote}</p> : null}
-            {focusedNote.body ? <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-stone-800">{focusedNote.body}</p> : <p className="mt-3 text-sm text-stone-600">No note text was added yet.</p>}
-          </div>
-        ) : null}
         <textarea
           value={body}
           onChange={(event) => setBody(event.target.value)}
-          placeholder={quote ? "Write your note about the highlighted text..." : "Write a note for this section, or use the mic to dictate..."}
+          placeholder={quote ? "Write your note about the highlighted text..." : "Write a note for this page, or use the mic to dictate..."}
           className="min-h-32 w-full resize-y rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-base leading-6 outline-none ring-amber-500 transition focus:ring-2 sm:text-sm"
         />
         <div className="mt-3 flex flex-wrap gap-2">
@@ -671,14 +714,18 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
           </button>
         </div>
         {message ? <p className="mt-3 rounded-2xl bg-stone-100 px-3 py-2 text-sm text-stone-600">{message}</p> : null}
-        {notes.length ? (
+        {visibleNotes.length ? (
           <div className="mt-5 max-h-72 min-w-0 space-y-3 overflow-auto pr-1">
-            {notes.map((note) => (
+            {visibleNotes.map((note) => {
+              const sourceSectionId = getSourceSectionId(note);
+              const sourceTitle = sectionTitleById[sourceSectionId] ?? sectionTitleById[note.sectionId] ?? sectionTitle;
+              return (
               <article key={note.id} className={`min-w-0 overflow-hidden rounded-2xl p-3 transition ${focusedNoteId === note.id ? "bg-amber-50 ring-2 ring-amber-300" : "bg-stone-100"}`}>
                 <div className="mb-2 flex min-w-0 flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-wide text-stone-500">
                   <span className="min-w-0 break-words">{noteKindLabel(note.type)}</span>
                   <span className="shrink-0">{formatDate(note.updatedAt)}</span>
                 </div>
+                <p className="mb-2 line-clamp-1 text-xs font-medium text-stone-500">{sourceTitle}</p>
                 {editingId === note.id ? (
                   <div className="grid gap-2">
                     {note.quote ? (
@@ -715,16 +762,17 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
                   </>
                 )}
               </article>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <p className="mt-4 text-sm text-stone-500">No saved notes for this section yet.</p>
+          <p className="mt-4 text-sm text-stone-500">No saved notes for this page yet.</p>
         )}
       </>
     );
   }
 
-  if (!activeSection) return null;
+  if (!pageSection) return null;
 
   return (
     <aside className="min-w-0 xl:min-h-full xl:w-96">

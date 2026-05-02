@@ -224,7 +224,7 @@ export function CourseSelectionAssistant() {
     window.setTimeout(() => inputRef.current?.focus(), 50);
   }
 
-  function addSelectionNote() {
+  function highlightSelection() {
     if (!selectionState?.sectionId || !selectionState.text) return;
     window.dispatchEvent(new CustomEvent(readingNotesAddHighlightEvent, {
       detail: {
@@ -312,8 +312,8 @@ export function CourseSelectionAssistant() {
           <button onClick={startChat} className="shrink-0 rounded-full px-3 py-2 hover:bg-white/15">
             Chat
           </button>
-          <button onClick={addSelectionNote} className="shrink-0 rounded-full px-3 py-2 hover:bg-white/15">
-            Add note
+          <button onClick={highlightSelection} className="shrink-0 rounded-full px-3 py-2 hover:bg-white/15">
+            Highlight
           </button>
           <a href={googleSearchUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 rounded-full px-3 py-2 hover:bg-white/15">
             Search web
