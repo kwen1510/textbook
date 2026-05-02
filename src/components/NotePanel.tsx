@@ -249,9 +249,15 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
       window.dispatchEvent(new CustomEvent<ReadingNotesActiveDetail>(readingNotesActiveEvent, { detail: { sectionId: nextSectionId } }));
     }
     if (options?.openDrawer) setDrawerOpen(true);
-    if (autoMarked.current.has(nextSectionId) || progressRef.current[nextSectionId] !== "unread") return;
+    const currentState = progressRef.current[nextSectionId] ?? "unread";
+    if (currentState === "unread") {
+      autoMarked.current.add(nextSectionId);
+      persistProgress(nextSectionId, "reading", { silent: true });
+      return;
+    }
+    if (autoMarked.current.has(nextSectionId)) return;
     autoMarked.current.add(nextSectionId);
-    persistProgress(nextSectionId, "reading", { silent: true });
+    persistProgress(nextSectionId, currentState, { silent: true });
   }, [persistProgress]);
 
   useEffect(() => {

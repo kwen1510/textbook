@@ -33,11 +33,23 @@ export default async function Home() {
   }
   const completed = progressRows.filter((row) => row.state === "completed").length;
   const needsReview = progressRows.filter((row) => row.state === "needs_review").length;
-  const latestActive = progressRows
-    .filter((row) => row.state === "reading" || row.state === "needs_review")
+  const latestViewed = progressRows
+    .filter((row) => getSectionLocation(row.sectionId))
     .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())[0];
   const firstUnfinished = sections.find((section) => !progressRows.some((row) => row.sectionId === section.id && row.state === "completed"));
-  const continueHref = (latestActive && getSectionLocation(latestActive.sectionId)?.href) ?? (firstUnfinished && getSectionLocation(firstUnfinished.id)?.href) ?? `/course/${getFirstChapter()?.slug}`;
+  const latestViewedIndex = latestViewed ? sections.findIndex((section) => section.id === latestViewed.sectionId) : -1;
+  const nextAfterLatest = latestViewedIndex >= 0
+    ? sections.slice(latestViewedIndex + 1).find((section) => !progressRows.some((row) => row.sectionId === section.id && row.state === "completed"))
+    : undefined;
+  const resumeLocation = latestViewed ? getSectionLocation(latestViewed.sectionId) : null;
+  const nextLocation = latestViewed?.state === "completed"
+    ? (nextAfterLatest ? getSectionLocation(nextAfterLatest.id) : null)
+    : null;
+  const fallbackLocation = firstUnfinished ? getSectionLocation(firstUnfinished.id) : null;
+  const continueLocation = nextLocation ?? resumeLocation ?? fallbackLocation;
+  const continueHref = continueLocation?.href ?? `/course/${getFirstChapter()?.slug}`;
+  const continueLabel = completed || latestViewed ? "Continue reading" : "Start reading";
+  const resumeState = nextLocation ? "Up next" : latestViewed?.state === "needs_review" ? "For review" : latestViewed?.state === "completed" ? "Completed" : latestViewed?.state === "reading" ? "In progress" : "Ready";
 
   return (
     <AppChrome userEmail={user.email}>
@@ -48,9 +60,16 @@ export default async function Home() {
             <h1 className="mt-5 max-w-3xl font-display text-5xl font-semibold leading-none tracking-tight sm:text-7xl">Textbook turns reading into practice.</h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-stone-300">Read the course in chapters, save notes per section, add optional AI voice notes, and review recall prompts from your phone or iPad.</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href={continueHref} className="rounded-full bg-amber-400 px-5 py-3 font-semibold text-stone-950">{completed || latestActive ? "Continue reading" : "Start reading"}</Link>
+              <Link href={continueHref} className="rounded-full bg-amber-400 px-5 py-3 font-semibold text-stone-950">{continueLabel}</Link>
               <Link href="/review" className="rounded-full border border-white/20 px-5 py-3 font-semibold text-white">Practice recall</Link>
             </div>
+            {continueLocation ? (
+              <div className="mt-6 max-w-2xl rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-300">Resume point · {resumeState}</p>
+                <p className="mt-2 text-lg font-semibold text-white">{continueLocation.section.title}</p>
+                <p className="mt-1 text-sm text-stone-400">{continueLocation.chapter.title}</p>
+              </div>
+            ) : null}
           </div>
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
             <Stat label="Chapters" value={chapters.length} />

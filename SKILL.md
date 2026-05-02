@@ -24,6 +24,7 @@ description: Use this skill when a user wants to turn a public GitHub repository
 
 - Keep the reader mobile-first: sticky top app nav, chapter drawer from the header, no fixed bottom tab bar.
 - Show chapter status dots in the chapter drawer/sidebar: unread, in progress, done, and for review.
+- The home page must show a clear resume target. If the latest viewed section is completed, continue to the next unfinished section after it; otherwise resume the latest viewed section.
 - Show section status dots/pills in the `On this chapter` rail.
 - Use one active `Reading notes` panel for the page. It follows the current section while the user scrolls.
 - On desktop, the notes panel stays fixed/sticky beside the reader. On mobile, it is a bottom dock that expands into a sheet.
