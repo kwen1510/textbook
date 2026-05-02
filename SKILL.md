@@ -29,6 +29,7 @@ description: Use this skill when a user wants to turn a public GitHub repository
 - Use one active `Reading notes` panel for the page. It follows the current section while the user scrolls.
 - On desktop, the notes panel stays fixed/sticky beside the reader. On mobile, it is a bottom dock that expands into a sheet.
 - On desktop, align the notes panel with the first reader content card. Prefer sticky positioning inside the notes column over viewport-fixed positioning.
+- Do not put `self-start` on the sticky notes panel's grid item; the parent must stretch with the content row so sticky keeps following on long pages.
 - The notes sheet must close from the handle, close button, or outside tap, and it must not obscure next/previous navigation.
 - Auto-set unread sections to `currently viewing` when they enter the reading band.
 - Auto-complete sections after the user scrolls past them, unless the user manually resets the section.

@@ -723,7 +723,7 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
   if (!activeSection) return null;
 
   return (
-    <aside className="min-w-0 xl:w-96 xl:self-start">
+    <aside className="min-w-0 xl:min-h-full xl:w-96">
       {!drawerOpen ? (
         <button
           type="button"
