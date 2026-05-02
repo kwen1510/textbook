@@ -102,7 +102,7 @@ function unwrapExistingHighlights() {
   });
 }
 
-function markFirstTextMatch(container: HTMLElement, quote: string) {
+function markFirstTextMatch(container: HTMLElement, noteId: string, quote: string, active = false) {
   const needle = quote.replace(/\s+/g, " ").trim();
   if (needle.length < 3) return;
   const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
@@ -123,7 +123,10 @@ function markFirstTextMatch(container: HTMLElement, quote: string) {
   range.setEnd(node, index + needle.length);
   const mark = document.createElement("mark");
   mark.dataset.bookHighlight = "true";
-  mark.className = "rounded bg-amber-200/70 px-0.5 text-inherit";
+  mark.dataset.bookHighlightNoteId = noteId;
+  mark.tabIndex = 0;
+  mark.title = "Open attached note";
+  mark.className = `cursor-pointer rounded px-0.5 text-inherit transition ${active ? "bg-amber-300 ring-2 ring-amber-500" : "bg-amber-200/70 hover:bg-amber-300"}`;
   range.surroundContents(mark);
 }
 
@@ -187,6 +190,8 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
+  const [focusedNoteId, setFocusedNoteId] = useState<string | null>(null);
+  const [draftNoteIdsBySection, setDraftNoteIdsBySection] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
   const autoMarked = useRef(new Set<string>());
   const autoCompleteSuppressed = useRef(new Set<string>());
@@ -207,6 +212,7 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
   const quote = quotesBySection[sectionId] ?? "";
   const type = typeBySection[sectionId] ?? "note";
   const progress = progressBySection[sectionId] ?? "unread";
+  const focusedNote = focusedNoteId ? notes.find((note) => note.id === focusedNoteId) ?? null : null;
 
   const setBody = useCallback((updater: string | ((current: string) => string), targetSectionId = sectionId) => {
     setDraftsBySection((current) => {
@@ -246,6 +252,7 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
       setMessage(null);
       setEditingId(null);
       setEditBody("");
+      setFocusedNoteId(null);
       window.dispatchEvent(new CustomEvent<ReadingNotesActiveDetail>(readingNotesActiveEvent, { detail: { sectionId: nextSectionId } }));
     }
     if (options?.openDrawer) setDrawerOpen(true);
@@ -340,42 +347,124 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
     for (const [highlightSectionId, sectionNotes] of Object.entries(notesBySection)) {
       const article = document.querySelector<HTMLElement>(`[data-course-section-id="${CSS.escape(highlightSectionId)}"]`);
       if (!article) continue;
-      const quotes = sectionNotes
+      const highlights = sectionNotes
         .filter((note) => note.type === "highlight")
-        .map((note) => splitHighlightBody(note).highlight)
-        .filter(Boolean);
-      const pendingQuote = quotesBySection[highlightSectionId]?.trim();
-      if (pendingQuote) quotes.unshift(pendingQuote);
-      for (const savedQuote of quotes.slice(0, 8)) markFirstTextMatch(article, savedQuote);
+        .map((note) => ({ note, quote: splitHighlightBody(note).highlight }))
+        .filter((item) => item.quote);
+      for (const item of highlights.slice(0, 8)) markFirstTextMatch(article, item.note.id, item.quote, focusedNoteId === item.note.id);
     }
-  }, [notesBySection, quotesBySection]);
+  }, [focusedNoteId, notesBySection]);
 
-  function saveNote(noteBody = body, noteType = type, targetSectionId = sectionId, noteQuote = quote) {
+  useEffect(() => {
+    function handleHighlightOpen(event: Event) {
+      const target = event.target as HTMLElement | null;
+      const mark = target?.closest<HTMLElement>("mark[data-book-highlight-note-id]");
+      const noteId = mark?.dataset.bookHighlightNoteId;
+      if (!noteId) return;
+      const note = Object.values(notesBySection).flat().find((item) => item.id === noteId);
+      if (!note) return;
+      event.preventDefault();
+      activateSection(note.sectionId, { openDrawer: true });
+      setFocusedNoteId(note.id);
+      setMessage("Showing the note attached to this highlight.");
+      window.getSelection()?.removeAllRanges();
+    }
+
+    function handleHighlightKeydown(event: KeyboardEvent) {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      handleHighlightOpen(event);
+    }
+
+    document.addEventListener("click", handleHighlightOpen);
+    document.addEventListener("keydown", handleHighlightKeydown);
+    return () => {
+      document.removeEventListener("click", handleHighlightOpen);
+      document.removeEventListener("keydown", handleHighlightKeydown);
+    };
+  }, [activateSection, notesBySection]);
+
+  const upsertDraftNote = useCallback(async ({
+    noteBody = body,
+    noteType = type,
+    targetSectionId = sectionId,
+    noteQuote = quote,
+    clearDraft = false,
+    silent = false,
+  }: {
+    noteBody?: string;
+    noteType?: Note["type"];
+    targetSectionId?: string;
+    noteQuote?: string;
+    clearDraft?: boolean;
+    silent?: boolean;
+  } = {}) => {
     if ((!noteBody.trim() && !noteQuote.trim()) || !targetSectionId) return;
-    setMessage(null);
-    startTransition(async () => {
-      try {
-        const response = await fetch("/api/notes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sectionId: targetSectionId, body: noteBody, quote: noteQuote || undefined, type: noteQuote ? "highlight" : noteType, tags: [] }),
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          setMessage(data.error ?? "Could not save note.");
-          return;
-        }
-        setNotesBySection((current) => ({ ...current, [targetSectionId]: [data.note, ...(current[targetSectionId] ?? [])] }));
+    if (!silent) setMessage(null);
+    const draftNoteId = draftNoteIdsBySection[targetSectionId];
+    const payload = {
+      sectionId: targetSectionId,
+      body: noteBody,
+      quote: noteQuote || undefined,
+      type: noteQuote ? "highlight" : noteType,
+      tags: [],
+    };
+
+    try {
+      const response = await fetch(draftNoteId ? `/api/notes/${draftNoteId}` : "/api/notes", {
+        method: draftNoteId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        if (!silent) setMessage(data.error ?? "Could not save note.");
+        return;
+      }
+
+      setNotesBySection((current) => {
+        const existing = current[targetSectionId] ?? [];
+        const nextNote = data.note as Note;
+        const found = existing.some((note) => note.id === nextNote.id);
+        return {
+          ...current,
+          [targetSectionId]: found
+            ? existing.map((note) => note.id === nextNote.id ? { ...note, ...nextNote } : note)
+            : [nextNote, ...existing],
+        };
+      });
+
+      if (!draftNoteId) setDraftNoteIdsBySection((current) => ({ ...current, [targetSectionId]: data.note.id }));
+      if (!clearDraft) await deleteDraft(targetSectionId).catch(() => undefined);
+      if (clearDraft) {
         setDraftsBySection((current) => ({ ...current, [targetSectionId]: "" }));
         setQuotesBySection((current) => ({ ...current, [targetSectionId]: "" }));
+        setDraftNoteIdsBySection((current) => {
+          const next = { ...current };
+          delete next[targetSectionId];
+          return next;
+        });
         setType("note", targetSectionId);
         await deleteDraft(targetSectionId).catch(() => undefined);
-        setMessage("Saved.");
-      } catch {
-        setMessage("Could not save note. Check your connection and try again.");
       }
+      if (!silent) setMessage("Saved.");
+    } catch {
+      if (!silent) setMessage("Could not save note. Check your connection and try again.");
+    }
+  }, [body, draftNoteIdsBySection, quote, sectionId, setType, type]);
+
+  function saveNote(noteBody = body, noteType = type, targetSectionId = sectionId, noteQuote = quote) {
+    startTransition(() => {
+      void upsertDraftNote({ noteBody, noteType, targetSectionId, noteQuote, clearDraft: true });
     });
   }
+
+  useEffect(() => {
+    if (!sectionId || (!body.trim() && !quote.trim())) return;
+    const timeout = window.setTimeout(() => {
+      void upsertDraftNote({ clearDraft: false, silent: true });
+    }, 1400);
+    return () => window.clearTimeout(timeout);
+  }, [body, quote, sectionId, type, upsertDraftNote]);
 
   function updateProgress(nextState: ProgressState) {
     if (!sectionId) return;
@@ -394,6 +483,7 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
 
   function beginEdit(note: Note) {
     setMessage(null);
+    setFocusedNoteId(note.id);
     setEditingId(note.id);
     setEditBody(note.body);
   }
@@ -502,6 +592,11 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
     setRecording(false);
   }
 
+  function minimizeDrawer() {
+    if (!pending && (body.trim() || quote.trim())) saveNote();
+    setDrawerOpen(false);
+  }
+
   function renderPanelBody(mobile = false) {
     return (
       <>
@@ -532,6 +627,13 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
             <button type="button" onClick={() => setQuote("")} className="mt-2 text-xs font-semibold text-stone-500 underline underline-offset-4">
               Remove highlight
             </button>
+          </div>
+        ) : null}
+        {focusedNote ? (
+          <div className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-amber-800">Attached highlight note</p>
+            {focusedNote.quote ? <p className="mt-2 max-h-24 overflow-auto whitespace-pre-wrap break-words text-sm leading-6 text-amber-950">{focusedNote.quote}</p> : null}
+            {focusedNote.body ? <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-stone-800">{focusedNote.body}</p> : <p className="mt-3 text-sm text-stone-600">No note text was added yet.</p>}
           </div>
         ) : null}
         <textarea
@@ -568,7 +670,7 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
         {notes.length ? (
           <div className="mt-5 max-h-72 min-w-0 space-y-3 overflow-auto pr-1">
             {notes.map((note) => (
-              <article key={note.id} className="min-w-0 overflow-hidden rounded-2xl bg-stone-100 p-3">
+              <article key={note.id} className={`min-w-0 overflow-hidden rounded-2xl p-3 transition ${focusedNoteId === note.id ? "bg-amber-50 ring-2 ring-amber-300" : "bg-stone-100"}`}>
                 <div className="mb-2 flex min-w-0 flex-wrap items-center justify-between gap-2 text-xs uppercase tracking-wide text-stone-500">
                   <span className="min-w-0 break-words">{noteKindLabel(note.type)}</span>
                   <span className="shrink-0">{formatDate(note.updatedAt)}</span>
@@ -642,10 +744,10 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
 
       {drawerOpen ? (
         <div className="fixed inset-0 z-50 xl:hidden" role="dialog" aria-modal="true" aria-label={`Reading notes for ${sectionTitle}`}>
-          <button className="absolute inset-0 h-full w-full cursor-default bg-transparent" aria-label="Minimize reading notes" onClick={() => setDrawerOpen(false)} />
+          <button className="absolute inset-0 h-full w-full cursor-default bg-transparent" aria-label="Minimize reading notes" onClick={minimizeDrawer} />
           <div className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] max-h-[82vh] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-[1.75rem] border border-stone-200 bg-white shadow-2xl">
             <div className="p-4 pb-0">
-              <button type="button" className="mx-auto block rounded-full px-8 py-2" aria-label="Minimize reading notes" onClick={() => setDrawerOpen(false)}>
+              <button type="button" className="mx-auto block rounded-full px-8 py-2" aria-label="Minimize reading notes" onClick={minimizeDrawer}>
                 <span className="block h-1.5 w-12 rounded-full bg-stone-300" />
               </button>
               <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 pb-4">
@@ -656,9 +758,6 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
                 </div>
                 <div className="flex min-w-0 shrink-0 items-center gap-2">
                   <span className="max-w-[10rem] truncate rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">{progressLabels[progress]}</span>
-                  <button type="button" onClick={() => setDrawerOpen(false)} className="rounded-full bg-stone-950 px-4 py-2 text-sm font-semibold text-white">
-                    Close
-                  </button>
                 </div>
               </div>
             </div>

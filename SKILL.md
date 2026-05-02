@@ -34,6 +34,8 @@ description: Use this skill when a user wants to turn a public GitHub repository
 - Auto-complete sections after the user scrolls past them, unless the user manually resets the section.
 - `Next` and `Next chapter` must mark the final section on the current page completed before navigating.
 - Notes have two main modes: page notes and highlighted-text notes. Store highlighted text separately from the note body and re-highlight saved text when the user returns.
+- Restored highlights should be clickable/tappable and open the attached note in the reading-notes panel.
+- The mobile notes sheet should minimise from the handle/backdrop without a close button, and non-empty drafts should autosave without creating duplicate notes.
 - Assistant explanations and selected terms should be saved as notes so the user can revisit them later.
 - Voice note buttons use a mic icon and visible recording state; tapping again stops recording.
 - PWA refresh prompts must show immediate feedback after click, such as disabling the button and showing `Refreshing...` with a spinner.
