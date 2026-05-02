@@ -46,7 +46,7 @@ export default async function Home() {
           <div className="rounded-[2.5rem] bg-stone-950 p-8 text-white shadow-2xl shadow-stone-900/20 sm:p-10">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-amber-300">Pinned source · {courseData.source.commit.slice(0, 7)}</p>
             <h1 className="mt-5 max-w-3xl font-display text-5xl font-semibold leading-none tracking-tight sm:text-7xl">Textbook turns reading into practice.</h1>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-stone-300">Read the primer in chapters, save notes per section, dictate voice notes with Groq Whisper, and review recall prompts from your phone or iPad.</p>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-stone-300">Read the course in chapters, save notes per section, add optional AI voice notes, and review recall prompts from your phone or iPad.</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href={continueHref} className="rounded-full bg-amber-400 px-5 py-3 font-semibold text-stone-950">{completed || latestActive ? "Continue reading" : "Start reading"}</Link>
               <Link href="/review" className="rounded-full border border-white/20 px-5 py-3 font-semibold text-white">Practice recall</Link>

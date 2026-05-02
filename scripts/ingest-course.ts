@@ -422,7 +422,9 @@ function rewriteInternalCourseLinks(chapters: Chapter[]) {
     for (const section of chapter.sections) {
       section.html = section.html.replace(/href="#([^"]+)"/g, (match, slug: string) => {
         const href = hrefBySlug.get(slug) ?? hrefByUniqueHtmlId.get(slug);
-        return href ? `href="${href}"` : match;
+        if (href) return `href="${href}"`;
+        const sourceHref = `${blobUrl(section.sourcePath)}#${slug}`;
+        return `href="${sourceHref}" target="_blank" rel="noopener noreferrer"`;
       });
     }
   }

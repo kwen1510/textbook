@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const CANONICAL_HOST = "systems-design-course.vercel.app";
+const CANONICAL_HOST = process.env.CANONICAL_HOST;
 
 export function proxy(request: NextRequest) {
   const host = request.headers.get("host")?.split(":")[0];
-  if (!host || host === CANONICAL_HOST || host === "localhost" || host === "127.0.0.1") {
+  if (!CANONICAL_HOST || !host || host === CANONICAL_HOST || host === "localhost" || host === "127.0.0.1") {
     return NextResponse.next();
   }
 

@@ -53,7 +53,8 @@ Only placeholder documentation hits are acceptable.
 - Vercel root directory: repository root.
 - Framework preset: Next.js.
 - Build command: `npm run build`.
-- Required env vars: `DATABASE_URL`, `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET`, `ALLOWED_USER_EMAIL`, `GROQ_API_KEY`.
-- Optional env var: `GROQ_STUDY_MODEL`; default is `llama-3.1-8b-instant`, but the user can swap to another Groq chat model.
-- Optional env var: `GROQ_API_KEY`; required only for AI assistant and voice transcription.
+- Required env vars: `DATABASE_URL`, `NEON_AUTH_BASE_URL`, `NEON_AUTH_COOKIE_SECRET`, `ALLOWED_USER_EMAIL`.
+- Optional env vars: `GROQ_API_KEY`, `GROQ_STUDY_MODEL`, `SOURCE_REPO_URL`, `CANONICAL_HOST`.
+- `GROQ_STUDY_MODEL` defaults to `llama-3.1-8b-instant`, but the user can swap to another Groq chat model.
+- `GROQ_API_KEY` is required only for AI assistant and voice transcription.
 - Voice transcription model is `whisper-large-v3-turbo`.
