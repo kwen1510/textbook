@@ -27,7 +27,7 @@ description: Use this skill when a user wants to turn a public GitHub repository
 - The home page must show a clear resume target. If the latest viewed section is completed, continue to the next unfinished section after it; otherwise resume the latest viewed section.
 - Show section status dots/pills in the `On this chapter` rail.
 - Use one active `Reading notes` panel for the page. It opens from a collapsed bottom-right dock on tablet/desktop and from a bottom dock on phone.
-- On tablet/desktop, keep the chapter map in the left rail. The rail can collapse, but it should remain in the reader layout rather than becoming the bottom-right floating control.
+- On tablet/desktop, keep the chapter map expanded in a sticky/floating left rail. It should remain visible while the reader scrolls, and it may scroll internally only when the chapter list exceeds the viewport.
 - On tablet/desktop, the reading-notes dock should float in the bottom-right, expand/collapse, and stay above bottom navigation controls.
 - The notes sheet must close from the handle, close button, or outside tap, and it must not obscure next/previous navigation.
 - Auto-set unread sections to `currently viewing` when they enter the reading band.
