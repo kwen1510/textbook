@@ -663,7 +663,7 @@ export function NotePanel({ sections }: { sections: NotePanelSection[] }) {
         </div>
       ) : null}
 
-      <div className="hidden max-h-[calc(100vh-6.5rem)] overflow-auto rounded-[1.5rem] border border-stone-200 bg-white/90 p-4 shadow-sm xl:fixed xl:right-[max(1.5rem,calc((100vw-96rem)/2+1.5rem))] xl:top-[5.75rem] xl:z-20 xl:block xl:w-96">
+      <div className="hidden max-h-[calc(100vh-6.5rem)] overflow-auto rounded-[1.5rem] border border-stone-200 bg-white/90 p-4 shadow-sm xl:sticky xl:top-[5.75rem] xl:block">
         {renderPanelBody()}
       </div>
     </aside>

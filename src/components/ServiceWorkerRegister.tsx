@@ -7,6 +7,7 @@ const DEV_CLEANUP_KEY = "textbook:dev-sw-cleaned";
 
 export function ServiceWorkerRegister() {
   const [updateReady, setUpdateReady] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const waitingWorker = useRef<ServiceWorker | null>(null);
 
   useEffect(() => {
@@ -81,8 +82,10 @@ export function ServiceWorkerRegister() {
       <p className="text-sm font-semibold">A new version is ready.</p>
       <p className="mt-1 text-sm text-stone-300">Refresh to use the latest deployed app and clear the old PWA cache.</p>
       <button
-        className="mt-3 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-stone-950"
+        disabled={refreshing}
+        className="mt-3 inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-stone-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:bg-amber-300 disabled:opacity-90"
         onClick={() => {
+          setRefreshing(true);
           waitingWorker.current?.postMessage({ type: "SKIP_WAITING" });
           navigator.serviceWorker.getRegistration().then((registration) => {
             registration?.waiting?.postMessage({ type: "SKIP_WAITING" });
@@ -90,7 +93,8 @@ export function ServiceWorkerRegister() {
           }).catch(() => window.location.reload());
         }}
       >
-        Refresh now
+        {refreshing ? <span className="size-3.5 animate-spin rounded-full border-2 border-stone-950/25 border-t-stone-950" aria-hidden="true" /> : null}
+        {refreshing ? "Refreshing..." : "Refresh now"}
       </button>
     </div>
   );

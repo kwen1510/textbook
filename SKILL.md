@@ -27,6 +27,7 @@ description: Use this skill when a user wants to turn a public GitHub repository
 - Show section status dots/pills in the `On this chapter` rail.
 - Use one active `Reading notes` panel for the page. It follows the current section while the user scrolls.
 - On desktop, the notes panel stays fixed/sticky beside the reader. On mobile, it is a bottom dock that expands into a sheet.
+- On desktop, align the notes panel with the first reader content card. Prefer sticky positioning inside the notes column over viewport-fixed positioning.
 - The notes sheet must close from the handle, close button, or outside tap, and it must not obscure next/previous navigation.
 - Auto-set unread sections to `currently viewing` when they enter the reading band.
 - Auto-complete sections after the user scrolls past them, unless the user manually resets the section.
@@ -34,6 +35,7 @@ description: Use this skill when a user wants to turn a public GitHub repository
 - Notes have two main modes: page notes and highlighted-text notes. Store highlighted text separately from the note body and re-highlight saved text when the user returns.
 - Assistant explanations and selected terms should be saved as notes so the user can revisit them later.
 - Voice note buttons use a mic icon and visible recording state; tapping again stops recording.
+- PWA refresh prompts must show immediate feedback after click, such as disabling the button and showing `Refreshing...` with a spinner.
 
 ## Safety Rules
 
