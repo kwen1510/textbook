@@ -37,13 +37,6 @@ type NotePanelProps = {
   pageSectionId?: string;
 };
 
-const progressLabels: Record<ProgressState, string> = {
-  unread: "Unread",
-  reading: "Currently viewing",
-  completed: "Completed",
-  needs_review: "For review",
-};
-
 function MicIcon({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -229,7 +222,6 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
   const body = draftsBySection[sectionId] ?? "";
   const quote = quotesBySection[sectionId] ?? "";
   const type = typeBySection[sectionId] ?? "note";
-  const progress = progressBySection[sectionId] ?? "unread";
   const visibleNotes = quote && focusedNoteId ? notes.filter((note) => note.id !== focusedNoteId) : notes;
 
   const setBody = useCallback((updater: string | ((current: string) => string), targetSectionId = sectionId) => {
@@ -510,21 +502,6 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
     return () => window.clearTimeout(timeout);
   }, [body, quote, sectionId, type, upsertDraftNote]);
 
-  function updateProgress(nextState: ProgressState) {
-    if (!sectionId) return;
-    if (nextState === "reading") {
-      autoMarked.current.add(sectionId);
-      autoCompleteSuppressed.current.add(sectionId);
-    } else {
-      autoCompleteSuppressed.current.delete(sectionId);
-    }
-    persistProgress(sectionId, nextState);
-  }
-
-  function toggleCompletion() {
-    updateProgress(progress === "completed" ? "reading" : "completed");
-  }
-
   function beginEdit(note: Note) {
     setMessage(null);
     setFocusedNoteId(note.id);
@@ -654,34 +631,19 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
     setDrawerOpen(false);
   }
 
-  function renderPanelBody(mobile = false) {
+  function renderPanelBody() {
     return (
       <>
-        <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-2">
+        <div className="mb-3 min-w-0">
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">Reading notes</p>
             <p className="mt-1 line-clamp-2 text-sm font-medium text-stone-800">{sectionTitle}</p>
-            <p className="mt-1 text-xs text-stone-500">Notes and highlights for this page</p>
-            <p className="mt-1 line-clamp-1 text-xs font-semibold text-amber-800">Adding to: {targetSectionTitle}</p>
+            <p className="mt-1 line-clamp-1 text-xs text-stone-500">Saving to <span className="font-semibold text-amber-800">{targetSectionTitle}</span></p>
           </div>
-          <label className="sr-only" htmlFor={`progress-${sectionId}-${mobile ? "mobile" : "desktop"}`}>
-            Learning state
-          </label>
-          <select
-            id={`progress-${sectionId}-${mobile ? "mobile" : "desktop"}`}
-            value={progress}
-            onChange={(event) => updateProgress(event.target.value as ProgressState)}
-            className="max-w-full rounded-full border border-stone-200 bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 shadow-sm"
-          >
-            <option value="unread">{progressLabels.unread}</option>
-            <option value="reading">{progressLabels.reading}</option>
-            <option value="completed">{progressLabels.completed}</option>
-            <option value="needs_review">{progressLabels.needs_review}</option>
-          </select>
         </div>
         {quote ? (
           <div className="mb-3 rounded-2xl border border-stone-200 bg-stone-100 px-4 py-3">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-stone-500">Highlighted text</p>
+            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-stone-500">Selected highlight</p>
             <p className="mt-2 max-h-28 overflow-auto whitespace-pre-wrap break-words text-sm leading-6 text-stone-700">{quote}</p>
             <button type="button" onClick={() => setQuote("")} className="mt-2 text-xs font-semibold text-stone-500 underline underline-offset-4">
               Remove highlight
@@ -692,7 +654,7 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
           value={body}
           onChange={(event) => setBody(event.target.value)}
           placeholder={quote ? "Write your note about the highlighted text..." : "Write a note for this page, or use the mic to dictate..."}
-          className="min-h-32 w-full resize-y rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-base leading-6 outline-none ring-amber-500 transition focus:ring-2 sm:text-sm"
+          className="min-h-28 w-full resize-y rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-base leading-6 outline-none ring-amber-500 transition focus:ring-2 sm:text-sm"
         />
         <div className="mt-3 flex flex-wrap gap-2">
           <button
@@ -708,18 +670,13 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
             className={`relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition ${recording ? "bg-red-600 text-white shadow-[0_0_0_4px_rgba(248,113,113,0.16),0_12px_28px_rgba(220,38,38,0.18)]" : "border border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100"}`}
           >
             <MicIcon className="size-4" />
-            {recording ? "Recording... tap to stop" : "Voice note"}
-          </button>
-          <button
-            onClick={toggleCompletion}
-            className={`rounded-full border px-4 py-2 text-sm font-semibold ${progress === "completed" ? "border-sky-300 bg-sky-50 text-sky-900" : "border-emerald-300 bg-emerald-50 text-emerald-900"}`}
-          >
-            {progress === "completed" ? "Set in progress" : "Mark complete"}
+            {recording ? "Recording... tap to stop" : "Dictate"}
           </button>
         </div>
         {message ? <p className="mt-3 rounded-2xl bg-stone-100 px-3 py-2 text-sm text-stone-600">{message}</p> : null}
         {visibleNotes.length ? (
           <div className="mt-5 max-h-72 min-w-0 space-y-3 overflow-auto pr-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-500">Saved on this page</p>
             {visibleNotes.map((note) => {
               const sourceSectionId = getSourceSectionId(note);
               const sourceTitle = sectionTitleById[sourceSectionId] ?? sectionTitleById[note.sectionId] ?? sectionTitle;
@@ -729,7 +686,7 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
                   <span className="min-w-0 break-words">{noteKindLabel(note.type)}</span>
                   <span className="shrink-0">{formatDate(note.updatedAt)}</span>
                 </div>
-                <p className="mb-2 line-clamp-1 text-xs font-medium text-stone-500">Added to: {sourceTitle}</p>
+                <p className="mb-2 line-clamp-1 text-xs font-medium text-stone-500">{sourceTitle}</p>
                 {editingId === note.id ? (
                   <div className="grid gap-2">
                     {note.quote ? (
@@ -791,9 +748,9 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
           <span className="flex items-center justify-between gap-3">
             <span className="min-w-0">
               <span className="block text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">Reading notes</span>
-              <span className="mt-1 block truncate text-sm font-medium text-stone-800">{notes.length ? `${notes.length} saved for ${sectionTitle}` : `No notes yet · ${sectionTitle}`}</span>
+              <span className="mt-1 block truncate text-sm font-medium text-stone-800">{notes.length ? `${notes.length} saved · ${sectionTitle}` : `No notes yet · ${sectionTitle}`}</span>
             </span>
-            <span className="shrink-0 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">{progressLabels[progress]}</span>
+            <span className="shrink-0 rounded-full bg-stone-950 px-3 py-1 text-xs font-semibold text-white">Open</span>
           </span>
         </button>
       ) : null}
@@ -810,15 +767,12 @@ export function NotePanel({ sections, pageTitle, pageSectionId }: NotePanelProps
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-amber-700">Reading notes</p>
                   <h2 className="mt-1 truncate text-lg font-semibold text-stone-950">{sectionTitle}</h2>
-                  <p className="mt-1 text-sm text-stone-500">{notes.length ? `${notes.length} saved` : "No notes yet"}</p>
-                </div>
-                <div className="flex min-w-0 shrink-0 items-center gap-2">
-                  <span className="max-w-[10rem] truncate rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">{progressLabels[progress]}</span>
+                  <p className="mt-1 line-clamp-1 text-sm text-stone-500">{notes.length ? `${notes.length} saved` : "No notes yet"} · Saving to {targetSectionTitle}</p>
                 </div>
               </div>
             </div>
             <div className="max-h-[calc(82vh-7.5rem)] overflow-auto border-t border-stone-100 p-4">
-              {renderPanelBody(true)}
+              {renderPanelBody()}
             </div>
           </div>
         </div>

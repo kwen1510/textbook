@@ -29,6 +29,7 @@ description: Use this skill when a user wants to turn a public GitHub repository
 - Use one active `Reading notes` panel for the page. It opens from a collapsed bottom-right dock on tablet/desktop and from a bottom dock on phone.
 - On tablet/desktop, keep the chapter map expanded in a sticky/floating left rail. It should remain visible while the reader scrolls, and it may scroll internally only when the chapter list exceeds the viewport.
 - On tablet/desktop, the reading-notes dock should float in the bottom-right, expand/collapse, and stay above bottom navigation controls.
+- Keep the reading-notes sheet focused on capture: page title, current save target, note box, Save, mic, and saved notes. Do not put progress dropdowns or manual completion controls inside the notes sheet.
 - The notes sheet must close from the handle, close button, or outside tap, and it must not obscure next/previous navigation.
 - Auto-set unread sections to `currently viewing` when they enter the reading band.
 - Auto-complete sections after the user scrolls past them, unless the user manually resets the section.
