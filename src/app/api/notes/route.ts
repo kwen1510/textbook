@@ -6,6 +6,7 @@ import { getDb } from "@/lib/db";
 import { notes } from "@/lib/schema";
 import { getSection } from "@/lib/course";
 import { ensureNotesSchema } from "@/lib/notes-schema";
+import { isLocalMode } from "@/lib/mode";
 
 const createNoteSchema = z.object({
   sectionId: z.string().min(1),
@@ -21,6 +22,10 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const sectionId = searchParams.get("sectionId");
   try {
+    if (isLocalMode()) {
+      const { listLocalNotes } = await import("@/lib/local-store");
+      return NextResponse.json({ notes: listLocalNotes(user.id, sectionId) });
+    }
     const db = getDb();
     await ensureNotesSchema();
     const rows = await db
@@ -42,6 +47,11 @@ export async function POST(request: Request) {
   if (!parsed.data.body.trim() && !parsed.data.quote?.trim()) return jsonError("Write a note or attach highlighted text before saving.");
   if (!getSection(parsed.data.sectionId)) return jsonError("Unknown section", 404);
   try {
+    if (isLocalMode()) {
+      const { createLocalNote } = await import("@/lib/local-store");
+      const created = createLocalNote({ ...parsed.data, userId: user.id, quote: parsed.data.quote ?? null });
+      return NextResponse.json({ note: created }, { status: 201 });
+    }
     await ensureNotesSchema();
     const [created] = await getDb()
       .insert(notes)

@@ -1,6 +1,8 @@
 import { SignInForm } from "@/components/SignInForm";
 import { SetupNotice } from "@/components/SetupNotice";
+import { isLocalMode } from "@/lib/mode";
 import { getMissingSetup } from "@/lib/setup";
+import { redirect } from "next/navigation";
 
 const reasonMessages: Record<string, string> = {
   email_not_allowed: "You signed in successfully, but this course is limited to the configured private account.",
@@ -9,6 +11,7 @@ const reasonMessages: Record<string, string> = {
 };
 
 export default async function SignInPage({ searchParams }: { searchParams?: Promise<{ reason?: string }> }) {
+  if (isLocalMode()) redirect("/");
   const missing = getMissingSetup().filter((item) => item !== "GROQ_API_KEY" && item !== "DATABASE_URL");
   if (missing.length) return <SetupNotice missing={missing} />;
   const reason = (await searchParams)?.reason;

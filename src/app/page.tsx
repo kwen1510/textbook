@@ -9,6 +9,8 @@ import { getMissingSetup } from "@/lib/setup";
 import { getDb } from "@/lib/db";
 import { getErrorMessage } from "@/lib/runtime";
 import { progress } from "@/lib/schema";
+import { isLocalMode } from "@/lib/mode";
+import type { LocalProgress } from "@/lib/local-store";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +20,14 @@ export default async function Home() {
   const user = await requireUser();
   const chapters = getChapters();
   const sections = getAllSections();
-  let progressRows: (typeof progress.$inferSelect)[];
+  let progressRows: (typeof progress.$inferSelect)[] | LocalProgress[];
   try {
-    progressRows = await getDb().select().from(progress).where(eq(progress.userId, user.id));
+    if (isLocalMode()) {
+      const { listLocalProgress } = await import("@/lib/local-store");
+      progressRows = listLocalProgress(user.id);
+    } else {
+      progressRows = await getDb().select().from(progress).where(eq(progress.userId, user.id));
+    }
   } catch (error) {
     console.error("Home page database query failed", error);
     return (

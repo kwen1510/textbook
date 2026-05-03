@@ -6,6 +6,11 @@ Textbook is for personal, educational, nonprofit, and other noncommercial use on
 
 Textbook stops ingestion of public repositories with no detected license by default. This is intentional: public GitHub access is not the same as permission to copy, adapt, or deploy content.
 
+## App Modes
+
+- `Private synced mode` is the default. It uses Neon Auth and Neon Postgres, works on Vercel, and syncs notes/progress across devices.
+- `Local-only mode` is for people who do not want auth or cloud storage while testing. Set `TEXTBOOK_MODE="local"` in `.env.local`; Textbook stores notes/progress in `.textbook/local.json`. This mode is not for Vercel deployment.
+
 ## Use With Codex
 
 Fastest path:
@@ -29,7 +34,7 @@ Required:
 - SOURCE_REPO_URL=<paste public GitHub repo URL here>
 - APP_NAME=<your app name>
 
-Use the safest defaults. Check the source license before ingesting. If allowed, ingest the source, preserve attribution, run tests/lint/build, check for secrets, and tell me the remaining Neon, Groq, and Vercel setup steps.
+Use the safest defaults. Check the source license before ingesting. If allowed, ingest the source, preserve attribution, verify all sections have review cards, run tests/lint/build, check for secrets, and tell me the remaining setup steps.
 ```
 
 See [QUICKSTART.md](QUICKSTART.md) for the full flow.
@@ -59,9 +64,15 @@ SOURCE_REPO_URL="https://github.com/org/repo"
 
 Groq is optional. Without `GROQ_API_KEY`, the core reading, notes, progress, and review features still work. `GROQ_STUDY_MODEL` defaults to `llama-3.1-8b-instant`; you can change it to another Groq chat model if you want a different cost, speed, or quality tradeoff.
 
+For local-only/no-auth testing, use this instead of Neon:
+
+```bash
+TEXTBOOK_MODE="local"
+```
+
 ## Deploy
 
-Deploy your fork to Vercel after setting the same environment variables in Project Settings. Import the forked repository, keep the root directory as the repository root, and use the default Next.js settings. `npm run ingest -- <repo-url>` writes `textbook.config.json` with the public source URL; commit that file with the generated course so Vercel can re-ingest on build. Alternatively, set `SOURCE_REPO_URL` in Vercel. Run `npm run build` locally before deploying.
+Deploy your fork to Vercel after setting the private synced mode environment variables in Project Settings. Import the forked repository, keep the root directory as the repository root, and use the default Next.js settings. `npm run ingest -- <repo-url>` writes `textbook.config.json` with the public source URL; commit that file with the generated course so Vercel can re-ingest on build. Alternatively, set `SOURCE_REPO_URL` in Vercel. Run `npm run build` locally before deploying. Do not set `TEXTBOOK_MODE=local` on Vercel.
 
 ## Source Attribution
 

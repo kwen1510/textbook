@@ -15,6 +15,8 @@ import { getDb } from "@/lib/db";
 import { getErrorMessage } from "@/lib/runtime";
 import { ensureNotesSchema } from "@/lib/notes-schema";
 import { notes, progress } from "@/lib/schema";
+import { isLocalMode } from "@/lib/mode";
+import type { LocalNote, LocalProgress } from "@/lib/local-store";
 
 export const dynamic = "force-dynamic";
 
@@ -27,13 +29,19 @@ export default async function CourseChapterPage({ params }: { params: Promise<{ 
   const chapter = getChapter(chapterSlug);
   if (!chapter) notFound();
   const user = await requireUser();
-  let chapterNotes: (typeof notes.$inferSelect)[];
-  let progressRows: (typeof progress.$inferSelect)[];
+  let chapterNotes: (typeof notes.$inferSelect)[] | LocalNote[];
+  let progressRows: (typeof progress.$inferSelect)[] | LocalProgress[];
   try {
-    const db = getDb();
-    await ensureNotesSchema();
-    chapterNotes = await db.select().from(notes).where(and(eq(notes.userId, user.id)));
-    progressRows = await db.select().from(progress).where(eq(progress.userId, user.id));
+    if (isLocalMode()) {
+      const { listLocalNotes, listLocalProgress } = await import("@/lib/local-store");
+      chapterNotes = listLocalNotes(user.id);
+      progressRows = listLocalProgress(user.id);
+    } else {
+      const db = getDb();
+      await ensureNotesSchema();
+      chapterNotes = await db.select().from(notes).where(and(eq(notes.userId, user.id)));
+      progressRows = await db.select().from(progress).where(eq(progress.userId, user.id));
+    }
   } catch (error) {
     console.error("Course page database query failed", error);
     return (

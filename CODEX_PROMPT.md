@@ -13,6 +13,7 @@ Required:
 
 Optional setup choices:
 - ALLOWED_USER_EMAIL=<your login email, or leave blank and ask me later>
+- APP_MODE=private-synced for Vercel/Neon, or local-only for no auth/local file storage
 - USE_GROQ_AI=yes
 - DEPLOY_TARGET=Vercel
 
@@ -25,6 +26,7 @@ Use the safest defaults:
 - Keep the app private by default.
 - Preserve attribution in ACKNOWLEDGEMENTS.md.
 - Use Groq model llama-3.1-8b-instant unless I ask for another model.
+- If APP_MODE is local-only, set TEXTBOOK_MODE=local and do not require Neon Auth or Neon Postgres. If APP_MODE is private-synced or omitted, prepare the app for Neon Auth/Postgres and Vercel.
 
-If the source is allowed, do everything needed: install dependencies if needed, ingest the source repo, verify generated links/assets, run tests/lint/build, check for secrets, commit the generated app changes if I ask you to, and tell me only the remaining external setup steps for Neon, Groq, and Vercel.
+If the source is allowed, do everything needed: install dependencies if needed, ingest the source repo, verify generated links/assets/content completeness, verify one review card is generated for every section, run tests/lint/build, check for secrets, commit the generated app changes if I ask you to, and tell me only the remaining setup steps for the selected mode.
 ```

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { NavigationFeedback } from "@/components/NavigationFeedback";
 
 const fraunces = Fraunces({ variable: "--font-display", subsets: ["latin"] });
 const plexSans = IBM_Plex_Sans({ variable: "--font-sans-custom", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable}`}>
       <body>
         <ServiceWorkerRegister />
+        <NavigationFeedback />
         {children}
       </body>
     </html>

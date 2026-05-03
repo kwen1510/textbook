@@ -25,7 +25,7 @@ Required:
 - SOURCE_REPO_URL=<paste public GitHub repo URL here>
 - APP_NAME=<your app name>
 
-Use the safest defaults. Check the source license before ingesting. If allowed, ingest the source, preserve attribution, run tests/lint/build, check for secrets, and tell me the remaining Neon, Groq, and Vercel setup steps.
+Use the safest defaults. Check the source license before ingesting. If allowed, ingest the source, preserve attribution, verify all sections have review cards, run tests/lint/build, check for secrets, and tell me the remaining Neon, Groq, and Vercel setup steps.
 ```
 
 ## Optional Details
@@ -34,11 +34,12 @@ Add these only if you already know them:
 
 ```text
 - ALLOWED_USER_EMAIL=<your login email>
+- APP_MODE=private-synced or local-only
 - USE_GROQ_AI=yes
 - DEPLOY_TARGET=Vercel
 ```
 
-If you leave them out, Codex should proceed with the app setup and tell you what values are still needed.
+If you leave them out, Codex should proceed with the app setup and tell you what values are still needed. Use `private-synced` for Vercel. Use `local-only` only when you want no auth and local file storage on your machine.
 
 ## What Gets Committed
 
@@ -49,6 +50,7 @@ Your generated app repository should contain:
 - `src/generated/course.ts`
 - `textbook.config.json` after ingestion
 - `ACKNOWLEDGEMENTS.md`
+- Generated review cards for every course section through the app code
 - tests and app code
 
 It should not contain:
@@ -72,6 +74,14 @@ npm test
 npm run lint
 npm run build
 ```
+
+For local-only/no-auth testing, set this in `.env.local` and skip `npm run db:migrate`:
+
+```bash
+TEXTBOOK_MODE="local"
+```
+
+Local-only mode stores notes, progress, recall attempts, and transcription metadata in a git-ignored local JSON file. It is not intended for Vercel.
 
 ## Vercel Settings
 

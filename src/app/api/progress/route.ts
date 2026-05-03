@@ -4,6 +4,7 @@ import { requireApiUser, jsonError, jsonRuntimeError } from "@/lib/api";
 import { getDb } from "@/lib/db";
 import { getSection } from "@/lib/course";
 import { progress } from "@/lib/schema";
+import { isLocalMode } from "@/lib/mode";
 
 const progressSchema = z.object({
   sectionId: z.string().min(1).optional(),
@@ -20,6 +21,11 @@ export async function POST(request: Request) {
   if (!targetSectionIds.length) return jsonError("Provide a sectionId or sectionIds.");
   if (targetSectionIds.some((sectionId) => !getSection(sectionId))) return jsonError("Unknown section", 404);
   try {
+    if (isLocalMode()) {
+      const { upsertLocalProgress } = await import("@/lib/local-store");
+      const rows = upsertLocalProgress(user.id, targetSectionIds, parsed.data.state);
+      return NextResponse.json({ progress: rows.length === 1 ? rows[0] : rows, progressRows: rows });
+    }
     const rows = await getDb()
       .insert(progress)
       .values(targetSectionIds.map((sectionId) => ({ userId: user.id, sectionId, state: parsed.data.state })))

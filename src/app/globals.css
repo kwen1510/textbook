@@ -206,3 +206,21 @@ body {
 .assistant-markdown-dark a {
   color: #fbbf24;
 }
+
+.navigation-feedback-bar {
+  animation: navigation-feedback-slide 1.05s ease-in-out infinite;
+}
+
+@keyframes navigation-feedback-slide {
+  0% {
+    transform: translateX(-110%);
+  }
+
+  55% {
+    transform: translateX(80%);
+  }
+
+  100% {
+    transform: translateX(210%);
+  }
+}

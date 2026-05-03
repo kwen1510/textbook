@@ -1,0 +1,4 @@
+interface:
+  display_name: "Textbook Template"
+  short_description: "Generate private study apps from docs repos"
+  default_prompt: "Use $textbook-template to turn this licensed GitHub repository into a private Textbook study app."

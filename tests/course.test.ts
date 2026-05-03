@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { courseData, getAllSections, getChapter } from "../src/lib/course";
+import { getReviewCards } from "../src/lib/review-cards";
 import { slugify } from "../src/lib/slug";
 
 describe("course ingestion output", () => {
@@ -46,6 +47,22 @@ describe("course ingestion output", () => {
         .filter((hash) => !ids.has(hash));
 
       expect(deadHashes).toEqual([]);
+    }
+  });
+
+  it("generates one review card per section", () => {
+    const cards = getReviewCards();
+    const sections = getAllSections();
+    expect(cards).toHaveLength(sections.length);
+    expect(new Set(cards.map((card) => card.sectionId)).size).toBe(sections.length);
+    for (const card of cards) {
+      expect(card.question.length).toBeGreaterThan(20);
+      expect(card.suggestedAnswer.length).toBeGreaterThan(20);
+      expect(card.href).toContain("/course/");
+      if (card.mode === "mcq") {
+        expect(card.choices?.length).toBe(4);
+        expect(card.choices?.some((choice) => choice.id === card.correctChoiceId)).toBe(true);
+      }
     }
   });
 });

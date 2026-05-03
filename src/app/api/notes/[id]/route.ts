@@ -5,6 +5,7 @@ import { requireApiUser, jsonError, jsonRuntimeError } from "@/lib/api";
 import { getDb } from "@/lib/db";
 import { notes } from "@/lib/schema";
 import { ensureNotesSchema } from "@/lib/notes-schema";
+import { isLocalMode } from "@/lib/mode";
 
 const updateNoteSchema = z.object({
   body: z.string().optional(),
@@ -23,6 +24,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return jsonError("Write a note or keep highlighted text before saving.");
   }
   try {
+    if (isLocalMode()) {
+      const { updateLocalNote } = await import("@/lib/local-store");
+      const updated = updateLocalNote(user.id, id, parsed.data);
+      if (!updated) return jsonError("Note not found", 404);
+      return NextResponse.json({ note: updated });
+    }
     await ensureNotesSchema();
     const [updated] = await getDb()
       .update(notes)
@@ -41,6 +48,11 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   if (response) return response;
   const { id } = await params;
   try {
+    if (isLocalMode()) {
+      const { deleteLocalNote } = await import("@/lib/local-store");
+      if (!deleteLocalNote(user.id, id)) return jsonError("Note not found", 404);
+      return NextResponse.json({ ok: true });
+    }
     await ensureNotesSchema();
     const [deleted] = await getDb()
       .delete(notes)

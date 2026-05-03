@@ -1,5 +1,6 @@
 import { createNeonAuth, type NeonAuth } from "@neondatabase/auth/next/server";
 import { redirect } from "next/navigation";
+import { isLocalMode, localUser } from "./mode";
 
 export type AppUser = {
   id: string;
@@ -23,6 +24,7 @@ export function getAuthFailureReason() {
 }
 
 export function hasAuthConfig() {
+  if (isLocalMode()) return true;
   return Boolean(process.env.NEON_AUTH_BASE_URL && process.env.NEON_AUTH_COOKIE_SECRET);
 }
 
@@ -40,6 +42,7 @@ export function getAuth() {
 }
 
 export async function getCurrentUser(): Promise<AppUser | null> {
+  if (isLocalMode()) return localUser;
   if (!hasAuthConfig()) return null;
   try {
     const sessionResult = await getAuth().getSession();

@@ -6,6 +6,7 @@ import { getDb } from "@/lib/db";
 import { getGroq, GROQ_STUDY_MODEL } from "@/lib/groq";
 import { ensureNotesSchema } from "@/lib/notes-schema";
 import { notes } from "@/lib/schema";
+import { isLocalMode } from "@/lib/mode";
 
 const chatMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -70,18 +71,31 @@ export async function POST(request: Request) {
     });
     const answer = completion.choices[0]?.message?.content ?? "I could not generate an explanation.";
 
-    await ensureNotesSchema();
-    await getDb().insert(notes).values({
-      userId: user.id,
-      sectionId: section.id,
-      type: "question",
-      quote: parsed.data.selectedText || parsed.data.question || null,
-      body: [
-        parsed.data.mode === "explain" ? `Question: Explain ${parsed.data.selectedText}` : `Question: ${parsed.data.question}`,
-        `Answer: ${answer}`,
-      ].join("\n\n"),
-      tags: ["assistant", parsed.data.mode],
-    });
+    const noteBody = [
+      parsed.data.mode === "explain" ? `Question: Explain ${parsed.data.selectedText}` : `Question: ${parsed.data.question}`,
+      `Answer: ${answer}`,
+    ].join("\n\n");
+    if (isLocalMode()) {
+      const { createLocalNote } = await import("@/lib/local-store");
+      createLocalNote({
+        userId: user.id,
+        sectionId: section.id,
+        type: "question",
+        quote: parsed.data.selectedText || parsed.data.question || null,
+        body: noteBody,
+        tags: ["assistant", parsed.data.mode],
+      });
+    } else {
+      await ensureNotesSchema();
+      await getDb().insert(notes).values({
+        userId: user.id,
+        sectionId: section.id,
+        type: "question",
+        quote: parsed.data.selectedText || parsed.data.question || null,
+        body: noteBody,
+        tags: ["assistant", parsed.data.mode],
+      });
+    }
 
     return NextResponse.json({
       answer,

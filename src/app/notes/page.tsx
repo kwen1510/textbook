@@ -8,15 +8,22 @@ import { getDb } from "@/lib/db";
 import { getErrorMessage } from "@/lib/runtime";
 import { ensureNotesSchema } from "@/lib/notes-schema";
 import { notes } from "@/lib/schema";
+import { isLocalMode } from "@/lib/mode";
+import type { LocalNote } from "@/lib/local-store";
 
 export const dynamic = "force-dynamic";
 
 export default async function NotesPage() {
   const user = await requireUser();
-  let rows: (typeof notes.$inferSelect)[];
+  let rows: (typeof notes.$inferSelect)[] | LocalNote[];
   try {
-    await ensureNotesSchema();
-    rows = await getDb().select().from(notes).where(eq(notes.userId, user.id)).orderBy(desc(notes.updatedAt));
+    if (isLocalMode()) {
+      const { listLocalNotes } = await import("@/lib/local-store");
+      rows = listLocalNotes(user.id);
+    } else {
+      await ensureNotesSchema();
+      rows = await getDb().select().from(notes).where(eq(notes.userId, user.id)).orderBy(desc(notes.updatedAt));
+    }
   } catch (error) {
     console.error("Notes page database query failed", error);
     return (

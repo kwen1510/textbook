@@ -40,6 +40,12 @@ yarn-error.log*
 # temporary source clone used by ingestion
 /content/source/
 
+# local-only no-auth SQLite store
+/.textbook/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

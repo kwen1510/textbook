@@ -5,6 +5,8 @@ import { getDb } from "@/lib/db";
 import { getSection } from "@/lib/course";
 import { transcriptionJobs } from "@/lib/schema";
 import { getGroq } from "@/lib/groq";
+import { isLocalMode } from "@/lib/mode";
+import type { LocalTranscriptionJob } from "@/lib/local-store";
 
 import { GROQ_TRANSCRIPTION_MODEL, validateAudioUpload } from "@/lib/transcription";
 
@@ -19,11 +21,16 @@ export async function POST(request: Request) {
   if (audioError) return jsonError(audioError, audio.size > 24 * 1024 * 1024 ? 413 : 400);
   if (sectionId && !getSection(sectionId)) return jsonError("Unknown section", 404);
 
-  let db: ReturnType<typeof getDb>;
-  let job: typeof transcriptionJobs.$inferSelect;
+  let db: ReturnType<typeof getDb> | null = null;
+  let job: typeof transcriptionJobs.$inferSelect | LocalTranscriptionJob;
   try {
-    db = getDb();
-    [job] = await db.insert(transcriptionJobs).values({ userId: user.id, sectionId, status: "pending", model: GROQ_TRANSCRIPTION_MODEL }).returning();
+    if (isLocalMode()) {
+      const { createLocalTranscriptionJob } = await import("@/lib/local-store");
+      job = createLocalTranscriptionJob({ userId: user.id, sectionId, model: GROQ_TRANSCRIPTION_MODEL });
+    } else {
+      db = getDb();
+      [job] = await db.insert(transcriptionJobs).values({ userId: user.id, sectionId, status: "pending", model: GROQ_TRANSCRIPTION_MODEL }).returning();
+    }
   } catch (error) {
     return jsonRuntimeError(error, "Transcription job could not be created");
   }
@@ -38,11 +45,21 @@ export async function POST(request: Request) {
       temperature: 0,
     });
     const transcript = (transcription.text ?? "").trim();
-    await db.update(transcriptionJobs).set({ status: "completed", transcript, metadata: transcription, updatedAt: new Date() }).where(eq(transcriptionJobs.id, job.id));
+    if (isLocalMode()) {
+      const { updateLocalTranscriptionJob } = await import("@/lib/local-store");
+      updateLocalTranscriptionJob(job.id, { status: "completed", transcript, metadata: transcription });
+    } else {
+      await db!.update(transcriptionJobs).set({ status: "completed", transcript, metadata: transcription, updatedAt: new Date() }).where(eq(transcriptionJobs.id, job.id));
+    }
     return NextResponse.json({ transcript, jobId: job.id });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Transcription failed";
-    await db.update(transcriptionJobs).set({ status: "failed", error: message, updatedAt: new Date() }).where(eq(transcriptionJobs.id, job.id));
+    if (isLocalMode()) {
+      const { updateLocalTranscriptionJob } = await import("@/lib/local-store");
+      updateLocalTranscriptionJob(job.id, { status: "failed", error: message });
+    } else {
+      await db!.update(transcriptionJobs).set({ status: "failed", error: message, updatedAt: new Date() }).where(eq(transcriptionJobs.id, job.id));
+    }
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
